@@ -1,0 +1,259 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testcode | Withdraw</title>
+  <style>
+    :root {
+      --primary: #7F5AF0; /* purple */
+      --secondary: #FBBF24; /* yellow */
+      --accent: #FF69B4; /* pink */
+      --light-blue: #ADD8E6;
+      --orange: #FFA500;
+      --bg: #f9f9ff;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding: 0;
+      background: var(--bg);
+      color: #333;
+    }
+
+    .header {
+      background: linear-gradient(90deg, var(--light-blue), var(--purple), var(--orange));
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: white;
+    }
+
+    .header h1 {
+      margin: 0;
+      font-size: 1.5rem;
+    }
+
+    .home-btn {
+      background: var(--secondary);
+      border: none;
+      padding: 0.5rem 1rem;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+    }
+
+    .container {
+      max-width: 600px;
+      margin: 2rem auto;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+      padding: 2rem;
+    }
+
+    .wallet {
+      font-size: 1.2rem;
+      margin-bottom: 1.5rem;
+      color: var(--primary);
+    }
+
+    input, button {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0 1rem;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+    }
+
+    button {
+      background: var(--accent);
+      color: white;
+      font-weight: bold;
+      border: none;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--orange);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 0.5rem;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+
+    @media (max-width: 600px) {
+      .container {
+        margin: 1rem;
+        padding: 1rem;
+      }
+
+      .header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .home-btn {
+        margin-top: 0.5rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Withdraw Funds</h1>
+    <button class="home-btn" onclick="location.href='index.html'">🏠 Home</button>
+  </div>
+<div style="background-color: #fff3cd; color: #856404; padding: 10px; border: 1px solid #ffeeba; border-radius: 5px; margin-bottom: 20px;">
+  <strong>📢 Please Note:</strong><br>
+  - Withdrawals are charged <strong>18% tax</strong>.<br>
+  - Withdrawal processing time is between <strong>9:00 AM and 5:00 PM</strong> daily.
+</div>
+
+  <div class="container">
+    <div class="wallet" id="walletBalance">Wallet Balance: Loading...</div>
+
+    <label>Amount to Withdraw:</label>
+    <input type="number" id="withdrawAmount" placeholder="Enter amount (min 200)" />
+    <p id="taxInfo" style="font-size: 14px; color: #666; margin-top: 5px;"></p>
+
+    <label>M-Pesa Number:</label>
+    <input type="tel" id="mpesaNumber" placeholder="07XXXXXXXX" readonly />
+
+    <button onclick="handleWithdraw()">Withdraw</button>
+
+    <p id="message" style="color:red; font-weight:bold;"></p>
+
+    <h3>Withdrawal History</h3>
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Date</th>
+          <th>Amount</th>
+          <th>Status</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="3">Loading...</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <script>
+    let user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+if (!user || !(user.id || user.id)) {
+  window.location.href = "login.html";
+}
+const userId = user.id || user.id;
+
+// ✅ Auto-fill M-Pesa number
+document.addEventListener("DOMContentLoaded", () => {
+  const mpesaInput = document.getElementById("mpesaNumber");
+  if (user && user.phone) {
+    mpesaInput.value = user.phone;
+  }
+});
+
+    const now = new Date();
+    const hour = now.getHours();
+
+    if (!user) {
+      document.body.innerHTML = "<h2 style='text-align:center;color:red;'>User not logged in.</h2>";
+      throw new Error("Not logged in");
+    }
+
+    const walletDisplay = document.getElementById("walletBalance");
+    const message = document.getElementById("message");
+
+    // Load Wallet
+    fetch(`/api/deposit/balance/${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        walletDisplay.textContent = `Wallet Balance: Ksh ${data.wallet?.toFixed(2) || '0.00'}`;
+      });
+
+    // Load Withdrawal History
+    fetch(`/api/withdraw?userId=${userId}`)
+      .then(res => res.json())
+      .then(data => {
+        const tbody = document.querySelector("#historyTable tbody");
+        tbody.innerHTML = "";
+        (data.history || []).forEach(w => {
+          const row = `<tr>
+            <td>${new Date(w.date).toLocaleString()}</td>
+            <td>Ksh ${w.amount}</td>
+            <td>${w.status}</td>
+          </tr>`;
+          tbody.innerHTML += row;
+        });
+      });
+	  
+async function handleWithdraw() {
+  try {
+    const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+    if (!user || !user.id) {
+      alert("User not logged in or session expired.");
+      window.location.href = "login.html";
+      return;
+    }
+
+    const amount = parseFloat(document.getElementById("withdrawAmount").value);
+    const phone = document.getElementById("mpesaNumber").value.trim();
+    const formattedPhone = phone.startsWith("0") ? "254" + phone.slice(1) : phone;
+
+    if (!amount || amount < 200) {
+      alert("Minimum withdrawal is Ksh 200.");
+      return;
+    }
+
+    console.log("🔁 Submitting withdrawal:", { userId, amount, phone });
+
+   const response = await fetch("/api/withdraw", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ userId, amount, phone: formattedPhone }),
+});
+
+    const result = await response.json();
+    if (result.success) {
+      message.style.color = "green";
+      message.textContent = "✅ Withdrawal request submitted!";
+      location.reload();
+    } else {
+      message.style.color = "red";
+      message.textContent = "❌ " + result.message;
+    }
+  } catch (err) {
+    console.error("❌ Withdrawal error:", err);
+    message.style.color = "red";
+    message.textContent = "❌ Something went wrong. Please try again.";
+  }
+}
+  
+  
+  const amountInput = document.getElementById("withdrawAmount"); // ✅ Fix ID
+const taxInfo = document.getElementById("taxInfo");
+
+amountInput.addEventListener("input", () => {
+  const amount = parseFloat(amountInput.value);
+  if (!isNaN(amount) && amount > 0) {
+    const afterTax = (amount * 0.82).toFixed(2); // 18% tax
+    taxInfo.textContent = `💰 After 18% tax, you'll receive approximately Ksh ${afterTax}`;
+  } else {
+    taxInfo.textContent = "";
+  }
+});
+
+  </script>
+</body>
+</html>

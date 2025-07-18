@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testcode | Login</title>
+  <style>
+    :root {
+      --yellow: #ffeb3b;
+      --lightblue: #add8e6;
+      --darkblue: #001f54;
+      --purple: #800080;
+      --pink: #ff69b4;
+      --silver: #c0c0c0;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to top left, var(--pink), var(--lightblue));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+    }
+
+    .auth-box {
+      background: white;
+      padding: 2rem;
+      border-radius: 16px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.2);
+      width: 90%;
+      max-width: 400px;
+      text-align: center;
+    }
+
+    .auth-box h2 {
+      color: var(--darkblue);
+      margin-bottom: 1.5rem;
+    }
+
+    .auth-box input {
+      width: 100%;
+      padding: 0.8rem;
+      margin: 0.5rem 0;
+      border-radius: 8px;
+      border: 1px solid var(--silver);
+      font-size: 1rem;
+    }
+
+    .remember-me {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+      margin-top: 0.5rem;
+      font-size: 0.9rem;
+      color: var(--darkblue);
+    }
+
+    .remember-me input {
+      margin-right: 8px;
+    }
+
+    .auth-box button {
+      background: linear-gradient(to right, var(--purple), var(--yellow));
+      border: none;
+      padding: 0.8rem 1.5rem;
+      color: white;
+      font-weight: bold;
+      border-radius: 8px;
+      cursor: pointer;
+      margin-top: 1rem;
+      width: 100%;
+      font-size: 1rem;
+      transition: background 0.3s ease;
+    }
+
+    .auth-box button:hover {
+      background: var(--darkblue);
+    }
+
+    .auth-box p {
+      margin-top: 1.2rem;
+      font-size: 0.95rem;
+    }
+
+    .auth-box a {
+      color: var(--darkblue);
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    .auth-box a:hover {
+      text-decoration: underline;
+    }
+
+    #loginMessage {
+      margin-top: 1rem;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="auth-box">
+    <h2>Welcome Back</h2>
+    <form id="loginForm">
+      <input type="email" id="email" placeholder="Email Address" required />
+      <input type="password" id="password" placeholder="Password" required />
+
+      <div class="remember-me">
+        <input type="checkbox" id="rememberMe" />
+        <label for="rememberMe">Remember me</label>
+      </div>
+
+      <button type="submit">Login</button>
+      <div id="loginMessage"></div>
+    </form>
+    <p>Don't have an account? <a href="signup.html">Sign Up</a></p>
+  </div>
+
+  <script>
+    // Check if already logged in
+    try {
+      const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+      if (user && user.email && user.fullName) {
+        window.location.href = "index.html";
+      }
+    } catch (e) {
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
+    }
+
+    // Handle login form
+    document.getElementById("loginForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const rememberMe = document.getElementById("rememberMe").checked;
+      const message = document.getElementById("loginMessage");
+
+      if (!email || !password) {
+        message.textContent = "❗ Please enter both email and password.";
+        message.style.color = "red";
+        return;
+      }
+
+      message.textContent = "⏳ Logging in...";
+      message.style.color = "gray";
+
+      try {
+        const res = await fetch("/api/user/login", {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({ email, password }),
+});
+
+        const data = await res.json();
+        if (data.success && data.user) {
+          message.textContent = "✅ Login successful!";
+          message.style.color = "green";
+
+          const storage = rememberMe ? localStorage : sessionStorage;
+          storage.setItem("user", JSON.stringify(data.user));
+
+          setTimeout(() => {
+            window.location.href = "index.html";
+          }, 800);
+        } else {
+          message.textContent = "❌ " + (data.message || "Invalid email or password.");
+          message.style.color = "red";
+        }
+      } catch (error) {
+        console.error("Login Error:", error);
+        message.textContent = "🚫 Server error. Try again later.";
+        message.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testcode | Agent Panel</title>
+  <style>
+    :root {
+      --darkblue: #001f54;
+      --lightblue: #e6f2ff;
+      --silver: #c0c0c0;
+      --green: #4caf50;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--lightblue);
+      margin: 0;
+      padding: 1rem;
+    }
+
+    header {
+      background-color: var(--darkblue);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    .summary, .referral-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+    }
+
+    .summary h3, .referral-box h3 {
+      margin: 0.5rem 0;
+      color: var(--darkblue);
+    }
+
+    .referral-link {
+      background-color: #f1f1f1;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      word-break: break-word;
+      border-radius: 5px;
+    }
+
+    .referral-box button {
+      background-color: var(--darkblue);
+      color: white;
+      border: none;
+      padding: 0.6rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .referral-box button:hover {
+      background-color: #003b8b;
+    }
+
+    .referral-table {
+      margin-top: 1rem;
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .referral-table th, .referral-table td {
+      border: 1px solid var(--silver);
+      padding: 0.75rem;
+      text-align: left;
+    }
+
+    .referral-table th {
+      background-color: var(--darkblue);
+      color: white;
+    }
+
+    .referral-table tbody td {
+      background-color: white;
+    }
+
+    .footer-btn {
+      text-align: center;
+      margin-top: 2rem;
+    }
+
+    .footer-btn button {
+      background-color: var(--darkblue);
+      color: white;
+      padding: 0.7rem 1.5rem;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .footer-btn button:hover {
+      background-color: #003b8b;
+    }
+
+    @media (max-width: 600px) {
+      .referral-table th, .referral-table td {
+        font-size: 0.85rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Referral Agent Panel</h2>
+  </header>
+
+  <div class="summary">
+    <h3>Total Referrals: <span id="totalReferrals">0</span></h3>
+    <h3>Total Commission Earned: KES <span id="totalCommission">0.00</span></h3>
+  </div>
+
+  <div class="referral-box">
+    <h3>Your Referral Link:</h3>
+    <div class="referral-link" id="referralLink">Generating...</div>
+    <button onclick="copyReferral()">📋 Copy Referral Link</button>
+  </div>
+
+  <table class="referral-table">
+    <thead>
+      <tr>
+        <th>Name</th>
+        <th>Email</th>
+        <th>Investment</th>
+        <th>Your Commission</th>
+      </tr>
+    </thead>
+    <tbody id="referralBody">
+      <tr>
+        <td colspan="4" style="text-align: center;">Loading referrals...</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <div class="footer-btn">
+    <button onclick="window.location.href='index.html'">⬅️ Back to Dashboard</button>
+  </div>
+
+  <script>
+    function copyReferral() {
+      const link = document.getElementById("referralLink").textContent;
+      navigator.clipboard.writeText(link).then(() => {
+        alert("✅ Referral link copied!");
+      }).catch(() => {
+        alert("❌ Failed to copy. Please copy manually.");
+      });
+    }
+
+    document.addEventListener("DOMContentLoaded", async () => {
+      const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+
+      if (!user || !user.refCode) {
+        alert("You must be logged in to view this page.");
+        window.location.href = "login.html";
+        return;
+      }
+
+      const referralURL = `${window.location.origin}/signup.html?ref=${user.refCode}`;
+      document.getElementById("referralLink").textContent = referralURL;
+
+      try {
+        const res = await fetch(`/api/agent/${user.refCode}`);
+        const data = await res.json();
+
+        const tbody = document.getElementById("referralBody");
+        const totalReferrals = document.getElementById("totalReferrals");
+        const totalCommission = document.getElementById("totalCommission");
+
+        if (!data.success || !Array.isArray(data.referrals) || data.referrals.length === 0) {
+          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: gray;">No referrals yet.</td></tr>`;
+          return;
+        }
+
+        let commissionSum = 0;
+        tbody.innerHTML = data.referrals.map(r => {
+          commissionSum += r.commission || 0;
+          return `
+            <tr>
+              <td>${r.fullName || "-"}</td>
+              <td>${r.email || "-"}</td>
+              <td>KES ${(r.investment || 0).toFixed(2)}</td>
+              <td>KES ${(r.commission || 0).toFixed(2)}</td>
+            </tr>
+          `;
+        }).join("");
+
+        totalReferrals.textContent = data.referrals.length;
+        totalCommission.textContent = commissionSum.toFixed(2);
+      } catch (err) {
+        console.error("Error loading referrals:", err);
+        document.getElementById("referralBody").innerHTML = `
+          <tr><td colspan="6" style="text-align: center; color: red;">❌ Failed to load referral data.</td></tr>
+        `;
+      }
+    });
+  </script>
+</body>
+</html>

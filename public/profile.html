@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Profile | Testcode</title>
+  <style>
+    :root {
+      --darkblue: #001f54;
+      --lightblue: #e0f7fa;
+      --purple: #800080;
+      --silver: #c0c0c0;
+      --green: #4caf50;
+      --red: #f44336;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to top left, var(--lightblue), var(--silver));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      padding: 1rem;
+    }
+
+    .profile-box {
+      background: #fff;
+      padding: 2rem;
+      border-radius: 12px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      width: 100%;
+      max-width: 450px;
+    }
+
+    h2 {
+      text-align: center;
+      color: var(--darkblue);
+    }
+
+    label {
+      display: block;
+      margin-top: 1rem;
+      font-weight: bold;
+      color: var(--darkblue);
+    }
+
+    input {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 0.4rem;
+      border: 1px solid var(--silver);
+      border-radius: 8px;
+      font-size: 1rem;
+    }
+
+    button {
+      width: 100%;
+      padding: 0.8rem;
+      margin-top: 1.5rem;
+      background: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+
+    button:hover {
+      background: var(--darkblue);
+    }
+
+    .message {
+      margin-top: 1rem;
+      text-align: center;
+      font-weight: bold;
+    }
+
+    .back-link {
+      margin-top: 2rem;
+      display: block;
+      text-align: center;
+      color: var(--purple);
+      font-weight: bold;
+      text-decoration: none;
+    }
+
+    .back-link:hover {
+      text-decoration: underline;
+    }
+
+    .referral-section {
+      margin-top: 1.5rem;
+      text-align: center;
+      background-color: #f1f1f1;
+      padding: 1rem;
+      border-radius: 10px;
+    }
+
+    .referral-link {
+      font-weight: bold;
+      margin: 0.5rem 0;
+      word-break: break-word;
+      color: var(--darkblue);
+    }
+
+    .copy-btn {
+      background-color: var(--green);
+      border: none;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .copy-btn:hover {
+      background-color: #388e3c;
+    }
+  </style>
+</head>
+<body>
+  <div class="profile-box">
+    <h2>👤 My Profile</h2>
+    <div class="static-profile">
+  <p><strong>Full Name:</strong> <span id="fullName">-</span></p>
+  <p><strong>Phone:</strong> <span id="userPhone"></span></p>
+  <p><strong>Referral Code:</strong> <span id="referralCode">-</span></p>
+  <p><strong>Email Address:</strong> <span id="email">-</span></p>
+</div>
+
+    <div class="referral-section">
+      <div>Your Referral Link:</div>
+      <div class="referral-link" id="referralLink"></div>
+      <button class="copy-btn" onclick="copyReferral()">📋 Copy Link</button>
+    </div>
+
+    <a class="back-link" href="index.html">⬅️ Back to Dashboard</a>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+
+    if (!user || !user.id || !user.email) {
+      window.location.href = "login.html";
+    }
+
+    document.getElementById("fullName").textContent = user.fullName || "-";
+	document.getElementById("userPhone").textContent = user.phone || "N/A";
+document.getElementById("referralCode").textContent = user.refCode || "N/A";
+document.getElementById("email").textContent = user.email || "-";
+
+    const referralLinkText = `${window.location.origin}/signup.html?ref=${user.refCode || ""}`;
+    document.getElementById("referralLink").textContent = referralLinkText;
+
+    function copyReferral() {
+      const link = document.getElementById("referralLink").textContent;
+      navigator.clipboard.writeText(link)
+        .then(() => alert("✅ Referral link copied!"))
+        .catch(() => alert("❌ Failed to copy link."));
+    }
+
+    document.getElementById("profileForm").addEventListener("submit", async function (e) {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullName").value.trim();
+      const password = document.getElementById("password").value.trim();
+      const email = user.email;
+      const message = document.getElementById("updateMessage");
+
+      if (!fullName) {
+        message.textContent = "❗ Full name is required.";
+        message.style.color = "red";
+        return;
+      }
+
+      message.textContent = "⏳ Updating...";
+      message.style.color = "gray";
+
+      try {
+        const res = await fetch("/api/update-profile", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            id: user.id,
+            fullName,
+            email,
+            password: password || undefined
+          })
+        });
+
+        const data = await res.json();
+
+        if (data.success && data.user) {
+          message.textContent = "✅ Profile updated successfully!";
+          message.style.color = "green";
+
+          localStorage.setItem("user", JSON.stringify(data.user));
+          if (sessionStorage.getItem("user")) {
+            sessionStorage.setItem("user", JSON.stringify(data.user));
+          }
+        } else {
+          message.textContent = "⚠️ " + (data.message || "Update failed.");
+          message.style.color = "orange";
+        }
+      } catch (err) {
+        message.textContent = "🚫 Server error. Please try again.";
+        message.style.color = "red";
+      }
+    });
+  </script>
+</body>
+</html>

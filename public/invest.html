@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Invest | Testcode</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f4f4;
+      padding: 1rem;
+      scroll-behavior: smooth;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 1rem;
+    }
+
+    .wallet {
+      background: #e3f2fd;
+      padding: 1rem;
+      border-radius: 10px;
+      margin-bottom: 1.5rem;
+      font-weight: bold;
+      text-align: center;
+    }
+   .back-btn {
+  background: #0288d1;
+  color: #fff;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: bold;
+  margin-top: 0.5rem;
+}
+.back-btn:hover {
+  background: #01579b;
+}
+    .plans-container {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+      gap: 1rem;
+    }
+
+    .plan-card {
+      background: #fff;
+      border-radius: 10px;
+      box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+      padding: 1rem;
+      text-align: center;
+    }
+
+    .plan-card h3 {
+      margin: 0.5rem 0;
+    }
+
+    .plan-card p {
+      margin: 0.2rem 0;
+    }
+
+    .plan-card button {
+      background: #00695c;
+      color: white;
+      padding: 0.5rem 1rem;
+      border: none;
+      margin-top: 0.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .plan-card button:hover {
+      background: #004d40;
+    }
+
+    .section {
+      margin-top: 2rem;
+    }
+
+    .investment-item {
+      background: #f9f9f9;
+      padding: 1rem;
+      border-left: 4px solid #2196f3;
+      margin-bottom: 0.7rem;
+      border-radius: 6px;
+    }
+
+    .investment-item.completed {
+      border-left-color: #4caf50;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Investment Plans</h1>
+  </div>
+
+  <div class="wallet">
+  Wallet Balance: KES <span id="walletBalance">0</span>
+  <br><br>
+  <button onclick="goHome()" class="back-btn">🏠⬅ Back to Home</button>
+</div>
+
+  <div class="plans-container" id="plansContainer"></div>
+
+  <div class="section">
+    <h2>Active Investments</h2>
+    <div id="activeInvestments">Loading...</div>
+  </div>
+
+  <div class="section">
+    <h2>Investment History</h2>
+    <div id="investmentHistory">Loading...</div>
+  </div>
+
+  <script>
+let user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+if (user && user.id && !user._id) {
+  user._id = user.id; // Normalize ID for backward compatibility
+}
+if (!user || !user.phone || !user._id) {
+  window.location.href = "login.html";
+}
+
+    const walletDisplay = document.getElementById("walletBalance");
+    const plansContainer = document.getElementById("plansContainer");
+    walletDisplay.textContent = parseFloat(user.wallet || 0).toFixed(2);
+
+    const plans = [
+      { id: 1, amount: 400, profit: "25%", duration: "100 days" },
+      { id: 2, amount: 800, profit: "25%", duration: "100 days" },
+      { id: 3, amount: 1800, profit: "25%", duration: "100 days" },
+      { id: 4, amount: 2800, profit: "25%", duration: "100 days" },
+      { id: 5, amount: 3500, profit: "25%", duration: "100 days" },
+      { id: 6, amount: 5000, profit: "25%", duration: "100 days" },
+      { id: 7, amount: 8500, profit: "25%", duration: "100 days" },
+      { id: 8, amount: 15000, profit: "25%", duration: "100 days" },
+      { id: 9, amount: 30000, profit: "25%", duration: "100 days" },
+    ];
+
+    plansContainer.innerHTML = plans.map(plan => `
+      <div class="plan-card" id="plan${plan.id}">
+        <h3>KES ${plan.amount}</h3>
+        <p>Profit: ${plan.profit}</p>
+        <p>Duration: ${plan.duration}</p>
+        <button onclick="invest(${plan.id}, ${plan.amount}, '${plan.duration}', '${plan.profit}')">Invest</button>
+      </div>
+    `).join('');
+
+    async function invest(planId, amount, duration, profit) {
+      if (user.wallet < amount) {
+        alert("❌ Insufficient wallet balance.");
+        return;
+      }
+
+      const confirmMsg = `✅ Are you sure you want to invest KES ${amount} for ${duration} with ${profit} profit?`;
+      if (!confirm(confirmMsg)) return;
+
+      try {
+        const res = await fetch("/api/invest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId: user._id, amount, planId })
+        });
+
+        const data = await res.json();
+        if (data.success && data.user) {
+          alert("✅ Investment successful!");
+          user = data.user;
+localStorage.setItem("user", JSON.stringify(user));
+sessionStorage.setItem("user", JSON.stringify(user)); // optional for fallback
+walletDisplay.textContent = parseFloat(user.wallet).toFixed(2);
+          loadInvestments();
+        } else {
+          alert("❌ " + (data.message || "Investment failed."));
+        }
+      } catch (err) {
+        alert("🚫 Server error. Try again.");
+      }
+    }
+
+    
+	async function loadInvestments() {
+  try {
+    const userId = user._id;
+    const res = await fetch(`/api/invest?userId=${userId}`);
+    const data = await res.json();
+
+    if (!data.success) {
+      document.getElementById("activeInvestments").textContent = "❌ Failed to load investments.";
+      document.getElementById("investmentHistory").textContent = "❌ Failed to load history.";
+      return;
+    }
+
+    const investments = data.investments || [];
+    const active = investments.filter(inv => inv.status === "Active");
+    const history = investments
+  .filter(inv => inv.status !== "Active")
+  .sort((a, b) => new Date(b.endDate) - new Date(a.endDate));
+
+    const activeDiv = document.getElementById("activeInvestments");
+    const historyDiv = document.getElementById("investmentHistory");
+    // ✅ Active Investments
+    activeDiv.innerHTML = active.length
+      ? active.map(inv => `
+          <div class="investment-item">
+            <strong>Amount:</strong> KES ${inv.amount} <br>
+            <strong>Daily:</strong> KES ${inv.daily} <br>
+            <strong>Earned:</strong> KES ${inv.earned} <br>
+            <strong>Status:</strong> ${inv.status} <br>
+            <strong>Start:</strong> ${new Date(inv.startDate).toLocaleString()} <br>
+            <strong>Ends:</strong> ${new Date(inv.endDate).toLocaleString()}
+          </div>
+        `).join('')
+      : "<p>No active investments.</p>";
+
+    // ✅ Investment History
+    historyDiv.innerHTML = history.length
+      ? history.map(inv => `
+          <div class="investment-item completed">
+            <strong>Amount:</strong> KES ${inv.amount} <br>
+            <strong>Earned:</strong> KES ${inv.earned} <br>
+            <strong>Duration:</strong> ${inv.duration} <br>
+            <strong>Status:</strong> ${inv.status} <br>
+            <strong>Start:</strong> ${new Date(inv.startDate).toLocaleString()} <br>
+            <strong>Ends:</strong> ${new Date(inv.endDate).toLocaleString()}
+			<strong>Next Credit:</strong> ${inv.lastEarned ? new Date(new Date(inv.lastEarned).getTime() + 86400000).toLocaleString() : 'TBD'}
+          </div>
+        `).join('')
+      : "<p>No completed investments yet. History appears after plans expire.</p>";
+
+  } catch (err) {
+    console.error("❌ loadInvestments error:", err);
+    document.getElementById("activeInvestments").textContent = "❌ Failed to load investments.";
+    document.getElementById("investmentHistory").textContent = "❌ Failed to load history.";
+  }
+}
+
+loadInvestments();
+window.addEventListener('load', () => {
+  const anchorId = location.hash.replace("#", "");
+  if (anchorId) {
+    const element = document.getElementById(anchorId);
+    if (element) {
+      element.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }
+  }
+});
+    function goHome() {
+    window.location.href = "index.html"; // Or whatever your homepage filename is
+  }
+  </script>
+</body>
+</html>

@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testcode | Investment Packages</title>
+  <style>
+    :root {
+      --darkblue: #001f54;
+      --lightblue: #f0f8ff;
+      --yellow: #ffeb3b;
+      --purple: #800080;
+      --silver: #c0c0c0;
+      --green: #4caf50;
+    }
+
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: var(--lightblue);
+      padding: 1rem;
+    }
+
+    header {
+      background-color: var(--darkblue);
+      color: white;
+      padding: 1rem;
+      text-align: center;
+      border-radius: 8px;
+    }
+
+    h2 {
+      margin: 1.2rem 0;
+      text-align: center;
+      color: var(--darkblue);
+    }
+
+    .packages-container {
+      display: grid;
+      gap: 1rem;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    }
+
+    .package-card {
+      background: white;
+      border-radius: 10px;
+      box-shadow: 0 0 8px rgba(0,0,0,0.1);
+      padding: 1rem;
+      text-align: center;
+      border: 2px solid var(--silver);
+      transition: transform 0.2s ease;
+    }
+
+    .package-card:hover {
+      transform: translateY(-4px);
+      border-color: var(--purple);
+    }
+
+    .package-card h3 {
+      color: var(--darkblue);
+      margin-bottom: 0.5rem;
+    }
+
+    .package-card p {
+      margin: 0.3rem 0;
+    }
+
+    .package-card button {
+      margin-top: 0.8rem;
+      padding: 0.6rem 1rem;
+      background-color: var(--purple);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .package-card button:hover {
+      background-color: var(--darkblue);
+    }
+
+    .back-btn {
+      margin-top: 2rem;
+      text-align: center;
+    }
+
+    .back-btn button {
+      background-color: var(--darkblue);
+      color: white;
+      border: none;
+      padding: 0.7rem 1.5rem;
+      border-radius: 6px;
+      cursor: pointer;
+    }
+
+    .back-btn button:hover {
+      background-color: #003b8b;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Investment Packages</h2>
+  </header>
+
+  <section class="packages-container" id="packagesList">
+    <p>Loading packages...</p>
+  </section>
+
+  <div class="back-btn">
+    <button onclick="window.location.href='index.html'">⬅️ Back to Dashboard</button>
+  </div>
+
+  <script>
+    document.addEventListener("DOMContentLoaded", () => {
+      const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+      if (!user) {
+        window.location.href = "login.html";
+        return;
+      }
+
+      const packages = [
+        { id: 1, amount: 400, profit: "25%", duration: "90 days" },
+        { id: 2, amount: 800, profit: "25%", duration: "100 days" },
+        { id: 3, amount: 1800, profit: "25%", duration: "100 days" },
+        { id: 4, amount: 2800, profit: "25%", duration: "100 days" },
+        { id: 5, amount: 3500, profit: "25%", duration: "100 days" },
+        { id: 6, amount: 5000, profit: "25%", duration: "100 days" },
+        { id: 7, amount: 8500, profit: "30%", duration: "100 days" },
+        { id: 8, amount: 15000, profit: "30%", duration: "100 days" },
+        { id: 9, amount: 30000, profit: "30%", duration: "100 days" }
+      ];
+
+      const container = document.getElementById("packagesList");
+      container.innerHTML = packages.map(p => `
+        <div class="package-card">
+          <h3>KES ${p.amount}</h3>
+          <p>Profit: ${p.profit}</p>
+          <p>Duration: ${p.duration}</p>
+          <button onclick="window.location.href='invest.html#plan${p.id}'">Invest Now</button>
+        </div>
+      `).join('');
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>History | Testcode</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f4f8fc;
+      margin: 0;
+      padding: 2rem;
+    }
+
+    h2 {
+      text-align: center;
+      color: #003366;
+      margin-bottom: 1rem;
+    }
+
+    .history-container {
+      max-width: 800px;
+      margin: auto;
+      background: #fff;
+      padding: 2rem;
+      border-radius: 10px;
+      box-shadow: 0 0 12px rgba(0,0,0,0.1);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    th, td {
+      padding: 12px;
+      border: 1px solid #ccc;
+      text-align: left;
+    }
+
+    th {
+      background-color: #003366;
+      color: white;
+    }
+
+    td.status {
+      text-transform: capitalize;
+      font-weight: bold;
+    }
+
+    .btn {
+      display: inline-block;
+      margin-top: 2rem;
+      padding: 0.7rem 1.5rem;
+      background: #003366;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      text-align: center;
+    }
+
+    .btn:hover {
+      background: #005299;
+    }
+
+    @media (max-width: 600px) {
+      table, thead, tbody, th, td, tr {
+        font-size: 0.9rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="history-container">
+    <h2>📜 Account History</h2>
+
+    <table id="historyTable">
+      <thead>
+        <tr>
+          <th>Type</th>
+          <th>Amount (KES)</th>
+          <th>Status</th>
+          <th>Date</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr><td colspan="4" style="text-align:center;">Loading history...</td></tr>
+      </tbody>
+    </table>
+
+    <a href="index.html" class="btn">⬅️ Back to Dashboard</a>
+  </div>
+
+  <script>
+  const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+  const tableBody = document.querySelector("#historyTable tbody");
+
+  if (!user || !(user.id || user._id)) {
+    window.location.href = "login.html";
+  }
+
+  const userId = user.id || user._id;
+
+  async function loadHistory() {
+    try {
+     const [withdrawalRes, depositRes] = await Promise.all([
+  fetch(`/api/withdraw?userId=${userId}`),
+  fetch(`/api/deposit?userId=${userId}`)
+]);
+
+
+      const [withdrawalData, depositData] = await Promise.all([
+        withdrawalRes.json(),
+        depositRes.json()
+      ]);
+
+      const withdrawals = withdrawalData.success && withdrawalData.history
+        ? withdrawalData.history.map(item => ({
+            type: 'Withdrawal',
+            amount: item.amount,
+            status: item.status,
+            date: item.date
+          }))
+        : [];
+
+      const deposits = depositData.success && depositData.deposits
+        ? depositData.deposits.map(item => ({
+            type: 'Recharge',
+            amount: item.amount,
+            status: item.status || 'completed',
+            date: item.date
+          }))
+        : [];
+
+      const combined = [...withdrawals, ...deposits].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+      if (combined.length === 0) {
+        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:gray;">No history found yet.</td></tr>`;
+        return;
+      }
+
+      tableBody.innerHTML = combined.map(entry => {
+        const date = entry.date ? new Date(entry.date).toLocaleString() : '—';
+        const statusColor = entry.status === 'approved' || entry.status === 'completed' ? 'green'
+                            : entry.status === 'pending' ? 'orange'
+                            : 'red';
+
+        return `
+          <tr>
+            <td>${entry.type}</td>
+            <td>${(entry.amount || 0).toFixed(2)}</td>
+            <td class="status" style="color: ${statusColor}">${entry.status}</td>
+            <td>${date}</td>
+          </tr>
+        `;
+      }).join("");
+
+    } catch (error) {
+      console.error("Error loading history:", error);
+      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">❌ Failed to load history. Try again later.</td></tr>`;
+    }
+  }
+
+  loadHistory();
+</script>
+</body>
+</html>

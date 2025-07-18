@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Admin Dashboard</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f2f5;
+      padding: 20px;
+    }
+    h1 {
+      text-align: center;
+      color: #333;
+    }
+    .section {
+      margin-top: 40px;
+      background: #ffffff;
+      padding: 20px;
+      border-radius: 10px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 10px;
+    }
+    th, td {
+      padding: 12px;
+      border-bottom: 1px solid #ddd;
+      text-align: left;
+    }
+    th {
+      background-color: #007bff;
+      color: white;
+    }
+    tr:hover {
+      background-color: #f1f1f1;
+    }
+    button {
+      padding: 6px 12px;
+      border: none;
+      background-color: #28a745;
+      color: white;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #218838;
+    }
+    .danger {
+      background-color: #dc3545;
+    }
+    .danger:hover {
+      background-color: #c82333;
+    }
+  </style>
+</head>
+<body>
+  <h1>✨ Admin Control Dashboard</h1>
+
+  <div class="section">
+    <h2>📤 Pending Withdrawal Requests</h2>
+    <table id="withdrawalTable">
+      <thead>
+        <tr><th>Name</th><th>Phone</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <div class="section">
+    <h2>📥 Pending Deposits (Recharge)</h2>
+    <table id="depositTable">
+      <thead>
+        <tr><th>Name</th><th>Phone</th><th>Amount</th><th>Message</th><th>Status</th><th>Action</th></tr>
+      </thead>
+      <tbody></tbody>
+    </table>
+  </div>
+
+  <script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user || user.role !== 'admin') {
+      alert("Access Denied: Admins only.");
+      window.location.href = "/login.html";
+    }
+
+    async function loadDashboard() {
+      try {
+        const res = await fetch('/api/admin/dashboard')
+        const data = await res.json();
+
+        const withdrawalBody = document.querySelector('#withdrawalTable tbody');
+        withdrawalBody.innerHTML = '';
+        data.pendingWithdrawals?.forEach(w => {
+          const u = data.users?.find(u => u._id === w.user || u._id === w.userId);
+          withdrawalBody.innerHTML += `
+            <tr>
+              <td>${u?.fullName || 'Unknown'}</td>
+              <td>${u?.phone || '-'}</td>
+              <td>Ksh ${w.amount}</td>
+              <td>${w.status}</td>
+              <td>
+                <button onclick="approveWithdrawal('${w._id}')">Approve</button>
+                <button class="danger" onclick="rejectWithdrawal('${w._id}')">Reject</button>
+              </td>
+            </tr>`;
+        });
+
+        const depositBody = document.querySelector('#depositTable tbody');
+        depositBody.innerHTML = '';
+        data.pendingDeposits?.forEach(d => {
+          const u = data.users?.find(u => u._id === d.user || u._id === d.userId);
+          depositBody.innerHTML += `
+            <tr>
+              <td>${u?.fullName || 'Unknown'}</td>
+              <td>${u?.phone || '-'}</td>
+              <td>Ksh ${d.amount}</td>
+              <td>${d.message?.slice(0, 80) || '-'}</td>
+              <td>${d.status}</td>
+              <td>
+                <button onclick="approveDeposit('${d._id}')">Approve</button>
+              </td>
+            </tr>`;
+        });
+
+      } catch (err) {
+        alert("Error loading dashboard");
+        console.error(err);
+      }
+    }
+
+    async function approveDeposit(id) {
+      if (!confirm('Confirm approving this deposit?')) return;
+      const res = await fetch(`/api/admin/approve-deposit/${id}`, { method: 'POST' })
+      const data = await res.json();
+      alert(data.message);
+      loadDashboard();
+    }
+
+    async function approveWithdrawal(id) {
+      if (!confirm('Confirm approving this withdrawal?')) return;
+      const res = await fetch(`/api/admin/approve-withdrawal/${id}`, { method: 'POST' });
+      const data = await res.json();
+      alert(data.message);
+      loadDashboard();
+    }
+
+    async function rejectWithdrawal(id) {
+      if (!confirm('Reject this withdrawal request?')) return;
+      const res = await fetch(`/api/admin/reject-withdrawal/${id}`, { method: 'POST' });
+      const data = await res.json();
+      alert(data.message);
+      loadDashboard();
+    }
+
+    loadDashboard();
+  </script>
+</body>
+</html>

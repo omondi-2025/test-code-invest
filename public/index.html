@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Testcode | Dashboard</title>
+  <link rel="icon" href="data:image/x-icon;," type="image/x-icon">
+
+  <style>
+    :root {
+      --yellow: #ffeb3b;
+      --lightblue: #add8e6;
+      --darkblue: #003366;
+      --purple: #9b59b6;
+      --pink: #ff69b4;
+      --silver: #c0c0c0;
+    }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      margin: 0;
+      padding-bottom: 100px;
+      background: #f2f2f2;
+    }
+
+    header {
+      background-color: var(--darkblue);
+      color: white;
+      padding: 1rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logout-btn {
+      background: crimson;
+      color: #fff;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+
+    .hero {
+      background: white;
+      padding: 1rem;
+      border-bottom: 1px solid #ddd;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+    }
+
+    .stat-card {
+      background-color: #fff;
+      padding: 1rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-center {
+      margin: 2rem auto;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+      gap: 1rem;
+      max-width: 600px;
+      padding: 0 1rem;
+    }
+
+    .action-center a {
+      text-decoration: none;
+      padding: 1rem;
+      background: linear-gradient(to right, var(--yellow), var(--pink));
+      color: #000;
+      font-weight: bold;
+      font-size: 1.1rem;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+      transition: all 0.3s ease;
+    }
+
+    .action-center a:hover {
+      background: var(--purple);
+      color: white;
+    }
+
+    .bottom-nav {
+      display: flex;
+      justify-content: space-around;
+      align-items: center;
+      background-color: #fff;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      border-top: 1px solid #ccc;
+      padding: 0.5rem 0;
+      z-index: 1000;
+    }
+
+    .bottom-nav a {
+      text-decoration: none;
+      color: #333;
+      font-size: 1.1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .bottom-nav a span {
+      font-size: 0.75rem;
+      margin-top: 2px;
+    }
+
+    .support-dropdown {
+      position: absolute;
+      top: 80px;
+      left: 20px;
+      z-index: 1000;
+    }
+
+    .support-dropdown button {
+      background: var(--purple);
+      color: white;
+      border: none;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .support-menu {
+      display: none;
+      position: absolute;
+      margin-top: 0.5rem;
+      background: white;
+      border: 1px solid #ccc;
+      border-radius: 6px;
+      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      flex-direction: column;
+      padding: 0.5rem;
+      width: 200px;
+    }
+
+    .support-menu a {
+      padding: 0.5rem;
+      color: var(--darkblue);
+      text-decoration: none;
+      display: block;
+      font-size: 0.95rem;
+    }
+
+    .support-menu a:hover {
+      background: #f0f0f0;
+    }
+
+    @media (max-width: 600px) {
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <header>
+    <h1>Testcode Dashboard</h1>
+    <button class="logout-btn" onclick="logout()">Logout</button>
+  </header>
+
+  <div class="support-dropdown" id="supportDropdown">
+    <button onclick="toggleSupportMenu()">🗣️ Support</button>
+    <div class="support-menu" id="supportMenu">
+      <a href="https://t.me/YOUR_CHANNEL_USERNAME" target="_blank">📢 WhatsApp Group</a>
+      <a href="https://t.me/YOUR_ADMIN_USERNAME" target="_blank">👨‍💬 Customer Service</a>
+    </div>
+  </div>
+
+  <section class="hero">
+    <h2>👋 Hello, <span id="userName">Investor</span></h2>
+    <p><strong>Email:</strong> <span id="profileEmail">-</span></p>
+    <p><strong>Wallet Balance:</strong> KES <span id="userWallet">0.00</span></p>
+  </section>
+
+  <div class="stats-grid">
+    <div class="stat-card">Balance <br><strong>KES <span id="balanceStat">0.00</span></strong></div>
+    <div class="stat-card">Cashouts <br><strong>KES <span id="cashouts">0.00</span></strong></div>
+    <div class="stat-card">Expenses <br><strong>KES <span id="expenses">0.00</span></strong></div>
+    <div class="stat-card">Daily Income <br><strong>KES <span id="dailyIncome">0.00</span></strong></div>
+  </div>
+
+  <div class="action-center">
+    <a href="deposit.html">🔄 Deposit</a>
+    <a href="withdrawal.html">💸 Withdraw</a>
+    <a href="invest.html">📈 Invest</a>
+    <a href="history.html">📜 History</a>
+    <a href="agent.html">🤝 Invite</a>
+    <a href="profile.html">👤 Profile</a>
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html">🏠<span>Home</span></a>
+    <a href="deposit.html">💳<span>Deposit</span></a>
+    <a href="invest.html">📈<span>Invest</span></a>
+    <a href="withdrawal.html">💸<span>Withdraw</span></a>
+    <a href="history.html">📜<span>History</span></a>
+    <a href="agent.html">👥<span>Invite</span></a>
+    <a href="profile.html">👤<span>Profile</span></a>
+  </nav>
+
+  <script>
+  document.addEventListener("DOMContentLoaded", async () => {
+    let user = null;
+
+try {
+  user = localStorage.getItem("user") || sessionStorage.getItem("user");
+  if (user) user = JSON.parse(user);
+
+  // ✅ Normalize _id to id
+  if (user && user._id && !user.id) {
+    user.id = user._id;
+  }
+} catch (err) {
+  console.warn("❌ Failed to parse user:", err);
+  localStorage.removeItem("user");
+  sessionStorage.removeItem("user");
+}
+
+if (!user || !user.id || !user.email) {
+  console.warn("🚫 No valid user session found. Redirecting to login.");
+  window.location.href = "login.html";
+  return;
+}
+    // 🧠 FETCH latest user data from DB
+    try {
+      const res = await fetch(`/api/user/${user.id}`);
+      
+	  const data = await res.json();
+      if (data.success && data.user) {
+        const u = data.user;
+
+        // 💾 Update UI
+        document.getElementById("userName").textContent = u.fullName;
+        document.getElementById("profileEmail").textContent = u.email;
+        document.getElementById("userWallet").textContent = parseFloat(u.wallet || 0).toFixed(2);
+        document.getElementById("balanceStat").textContent = parseFloat(u.wallet || 0).toFixed(2);
+        document.getElementById("cashouts").textContent = parseFloat(u.cashouts || 0).toFixed(2);
+        document.getElementById("expenses").textContent = parseFloat(u.expenses || 0).toFixed(2);
+        document.getElementById("dailyIncome").textContent = parseFloat(u.dailyIncome || 0).toFixed(2);
+
+        // 💾 Update localStorage with new data
+        localStorage.setItem("user", JSON.stringify({
+          id: u._id,
+          fullName: u.fullName,
+          email: u.email,
+          phone: u.phone,
+          wallet: u.wallet,
+          refCode: u.refCode,
+          cashouts: u.cashouts,
+          expenses: u.expenses,
+          dailyIncome: u.dailyIncome,
+          role: u.role
+        }));
+      }
+    } catch (err) {
+      console.error("❌ Failed to fetch updated user data:", err);
+    }
+  });
+
+  function logout() {
+    localStorage.removeItem("user");
+    sessionStorage.removeItem("user");
+    location.href = "login.html";
+  }
+
+  function toggleSupportMenu() {
+    const menu = document.getElementById("supportMenu");
+    menu.style.display = menu.style.display === "block" ? "none" : "block";
+  }
+
+  document.addEventListener("click", (e) => {
+    if (!document.getElementById("supportDropdown").contains(e.target)) {
+      document.getElementById("supportMenu").style.display = "none";
+    }
+  });
+</script>
+</body>
+</html>
