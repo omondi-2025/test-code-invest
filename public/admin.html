@@ -89,7 +89,7 @@
 
     async function loadDashboard() {
       try {
-        const res = await fetch('/api/admin/dashboard')
+        const res = await fetch('https://test-code-invest.onrender.com/api/admin/dashboard')
         const data = await res.json();
 
         const withdrawalBody = document.querySelector('#withdrawalTable tbody');
@@ -134,7 +134,7 @@
 
     async function approveDeposit(id) {
       if (!confirm('Confirm approving this deposit?')) return;
-      const res = await fetch(`/api/admin/approve-deposit/${id}`, { method: 'POST' })
+      const res = await fetch(`https://test-code-invest.onrender.com/api/admin/approve-deposit/${id}`, { method: 'POST' })
       const data = await res.json();
       alert(data.message);
       loadDashboard();
@@ -142,7 +142,7 @@
 
     async function approveWithdrawal(id) {
       if (!confirm('Confirm approving this withdrawal?')) return;
-      const res = await fetch(`/api/admin/approve-withdrawal/${id}`, { method: 'POST' });
+      const res = await fetch(`https://test-code-invest.onrender.com/api/admin/approve-withdrawal/${id}`, { method: 'POST' });
       const data = await res.json();
       alert(data.message);
       loadDashboard();
@@ -150,7 +150,7 @@
 
     async function rejectWithdrawal(id) {
       if (!confirm('Reject this withdrawal request?')) return;
-      const res = await fetch(`/api/admin/reject-withdrawal/${id}`, { method: 'POST' });
+      const res = await fetch(`https://test-code-invest.onrender.com/api/admin/reject-withdrawal/${id}`, { method: 'POST' });
       const data = await res.json();
       alert(data.message);
       loadDashboard();
