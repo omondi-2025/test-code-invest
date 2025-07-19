@@ -245,7 +245,19 @@ if (!user || !user.id || !user.email) {
         const u = data.user;
 
         // 💾 Update UI
-        document.getElementById("userName").textContent = u.fullName;
+        // ⏰ Time-based greeting
+const hour = new Date().getHours();
+let greeting = "Hello";
+
+if (hour < 12) {
+  greeting = "Good morning";
+} else if (hour < 18) {
+  greeting = "Good afternoon";
+} else {
+  greeting = "Good evening";
+}
+
+        document.getElementById("userName").textContent = `${greeting}, ${u.fullName}`;
         document.getElementById("profileEmail").textContent = u.email;
         document.getElementById("userWallet").textContent = parseFloat(u.wallet || 0).toFixed(2);
         document.getElementById("balanceStat").textContent = parseFloat(u.wallet || 0).toFixed(2);
