@@ -49,6 +49,7 @@
     "merge-descriptors": "^2.0.0",
     "mime-db": "^1.54.0",
     "mime-types": "^3.0.1",
+    "moment-timezone": "^0.6.0",
     "mongodb": "^6.17.0",
     "mongodb-connection-string-url": "^3.0.2",
     "mongoose": "^8.16.4",

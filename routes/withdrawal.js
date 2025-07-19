@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const Withdrawal = require("../models/Withdrawal");
 const User = require("../models/User");
+const moment = require("moment-timezone");
 
 /**
  * 🏧 POST /api/withdraw
@@ -37,15 +38,18 @@ router.post("/", async (req, res) => {
         .json({ success: false, message: "Minimum withdrawal is Ksh 200." });
     }
 
-    // business hours check (server local time)
-    const now = new Date();
-    const hour = now.getHours();
-    if (hour < 9 || hour >= 17) {
-      return res.status(400).json({
-        success: false,
-        message: "Withdrawals are allowed from 9AM to 5PM only.",
-      });
-    }
+    // business hours check (Kenya local time)
+const kenyaTime = moment().tz("Africa/Nairobi");
+const hour = kenyaTime.hour();
+const now = kenyaTime.toDate(); // ✅ Needed for database timestamp
+console.log("🇰🇪 Kenya Time:", kenyaTime.format(), "→ Hour:", hour);
+
+if (hour < 9 || hour >= 17) {
+  return res.status(400).json({
+    success: false,
+    message: "Withdrawals are allowed from 9AM to 5PM only.",
+  });
+}
 
     // load user
     const user = await User.findById(userId);
