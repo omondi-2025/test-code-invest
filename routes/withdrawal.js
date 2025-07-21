@@ -51,6 +51,22 @@ if (hour < 9 || hour >= 17) {
   });
 }
 
+// ⛔ Only one withdrawal per day
+const todayStart = kenyaTime.clone().startOf('day').toDate();
+const todayEnd = kenyaTime.clone().endOf('day').toDate();
+
+const existingToday = await Withdrawal.findOne({
+  user: userId,
+  date: { $gte: todayStart, $lte: todayEnd }
+});
+
+if (existingToday) {
+  return res.status(400).json({
+    success: false,
+    message: "🚫 You can only make one withdrawal per day.",
+  });
+}
+
     // load user
     const user = await User.findById(userId);
     if (!user) {
