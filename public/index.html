@@ -173,12 +173,12 @@
     <button class="logout-btn" onclick="logout()">Logout</button>
   </header>
 
-  <div class="Whatsapp Chat-dropdown" id="Whatsapp ChatDropdown">
-    <button onclick="toggleWhatsapp ChatMenu()">🗣️ Whatsapp Chat</button>
-    <div class="Whatsapp Chat-menu" id="Whatsapp ChatMenu">
-      <a href="https://chat.whatsapp.com/DJO9NGcMiJdCLwGkTg3JpV?mode=ac_t" target="_blank">📢 Join WhatsApp Group</a>
-    </div>
+  <div class="wa-dropdown" id="waDropdown">
+  <button onclick="toggleWAMenu()">🗣️ Whatsapp Chat</button>
+  <div class="wa-menu" id="waMenu" style="display:none;">
+    <a href="https://chat.whatsapp.com/DJO9NGcMiJdCLwGkTg3JpV?mode=ac_t" target="_blank">📢 Join WhatsApp Group</a>
   </div>
+</div>
 
   <section class="hero">
     <h2>👋 <span id="userName">Investor</span></h2>
@@ -289,10 +289,11 @@ if (hour < 12) {
     location.href = "login.html";
   }
 
-  function toggleSupportMenu() {
-    const menu = document.getElementById("supportMenu");
+  function toggleWAMenu() {
+    const menu = document.getElementById("waMenu");
     menu.style.display = menu.style.display === "block" ? "none" : "block";
   }
+
 
   document.addEventListener("click", (e) => {
     if (!document.getElementById("supportDropdown").contains(e.target)) {
