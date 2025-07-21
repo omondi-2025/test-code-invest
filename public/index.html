@@ -117,47 +117,54 @@
       margin-top: 2px;
     }
 
-    .Whatsapp Chat-dropdown {
-      position: absolute;
-      top: 80px;
-      left: 20px;
-      z-index: 1000;
-    }
+    .wa-dropdown {
+    position: relative;
+    display: inline-block;
+    margin: 1rem;
+  }
 
-    .Whatsapp Chat-dropdown button {
-      background: var(--purple);
-      color: white;
-      border: none;
-      padding: 0.5rem 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      font-weight: bold;
-    }
+  .wa-dropdown button {
+    background-color: #25D366;
+    color: white;
+    padding: 12px 20px;
+    border: none;
+    border-radius: 30px;
+    cursor: pointer;
+    font-weight: bold;
+    font-size: 16px;
+    box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+    transition: background-color 0.3s ease;
+  }
 
-    .Whatsapp Chat-menu {
-      display: none;
-      position: absolute;
-      margin-top: 0.5rem;
-      background: white;
-      border: 1px solid #ccc;
-      border-radius: 6px;
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-      flex-direction: column;
-      padding: 0.5rem;
-      width: 200px;
-    }
+  .wa-dropdown button:hover {
+    background-color: #1ebc57;
+  }
 
-    .Whatsapp Chat-menu a {
-      padding: 0.5rem;
-      color: var(--darkblue);
-      text-decoration: none;
-      display: block;
-      font-size: 0.95rem;
-    }
+  .wa-menu {
+    display: none;
+    position: absolute;
+    background-color: #ffffff;
+    min-width: 260px;
+    box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+    border-radius: 10px;
+    z-index: 1;
+    padding: 12px;
+    margin-top: 8px;
+  }
 
-    .Whatsapp Chat-menu a:hover {
-      background: #f0f0f0;
-    }
+  .wa-menu a {
+    color: #333;
+    padding: 10px 12px;
+    text-decoration: none;
+    display: block;
+    border-radius: 8px;
+    font-weight: bold;
+    transition: background-color 0.2s;
+  }
+
+  .wa-menu a:hover {
+    background-color: #f0f0f0;
+  }
 
     @media (max-width: 600px) {
       .stats-grid {
@@ -174,8 +181,8 @@
   </header>
 
   <div class="wa-dropdown" id="waDropdown">
-  <button onclick="toggleWAMenu()">🗣️ Whatsapp Chat</button>
-  <div class="wa-menu" id="waMenu" style="display:none;">
+  <button onclick="toggleWAMenu()">🟢 WhatsApp Chat</button>
+  <div class="wa-menu" id="waMenu">
     <a href="https://chat.whatsapp.com/DJO9NGcMiJdCLwGkTg3JpV?mode=ac_t" target="_blank">📢 Join WhatsApp Group</a>
   </div>
 </div>
@@ -293,8 +300,7 @@ if (hour < 12) {
     const menu = document.getElementById("waMenu");
     menu.style.display = menu.style.display === "block" ? "none" : "block";
   }
-
-
+  
   document.addEventListener("click", (e) => {
     if (!document.getElementById("supportDropdown").contains(e.target)) {
       document.getElementById("supportMenu").style.display = "none";
