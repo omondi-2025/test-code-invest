@@ -123,6 +123,38 @@
         font-size: 0.85rem;
       }
     }
+	
+	.whatsapp-btn {
+  display: inline-block;
+  background: linear-gradient(45deg, #25D366, #128C7E);
+  color: white;
+  padding: 0.8rem 1.4rem;
+  font-size: 1rem;
+  font-weight: bold;
+  border-radius: 30px;
+  text-decoration: none;
+  border: none;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  animation: bounceBtn 1.8s infinite;
+  transition: transform 0.2s ease;
+}
+
+.whatsapp-btn:hover {
+  transform: scale(1.05);
+}
+
+@keyframes bounceBtn {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-5px); }
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
   </style>
 </head>
 <body>
@@ -141,18 +173,23 @@
 
   <div class="referral-box">
     <h3>Your Referral Link:</h3>
-    <div class="referral-link" id="referralLink">Generating...</div>
+    <div class="referral-link">
+  <a href="#" id="referralLink" style="color: #001f54; text-decoration: underline;" target="_blank">Generating...</a>
+</div>
     <button onclick="copyReferral()">📋 Copy Referral Link</button>
-	<button onclick="shareReferral()" style="margin-left: 0.5rem; background-color: #25D366;">📤 Share on WhatsApp</button>
+	<button class="whatsapp-btn" onclick="shareReferral()">📤 Share on WhatsApp</button>
   </div>
+  <p style="margin-top: 0.8rem; color: #007E33; font-weight: bold; font-size: 1rem;">
+  📢 Invite a friend and earn <span style="color: #FFD700;">20%</span> of their first investment!
+</p>
 
   <table class="referral-table">
     <thead>
       <tr>
         <th>Name</th>
         <th>Email</th>
-        <th>Investment</th>
-        <th>Your Commission</th>
+        <th>Investment 💰</th>
+        <th>Your Commission 🎁</th>
       </tr>
     </thead>
     <tbody id="referralBody">
@@ -186,7 +223,10 @@
       }
 
       const referralURL = `${window.location.origin}/signup.html?ref=${user.refCode}`;
-      document.getElementById("referralLink").textContent = referralURL;
+const referralLinkElem = document.getElementById("referralLink");
+referralLinkElem.textContent = referralURL;
+referralLinkElem.href = referralURL;
+
 
       try {
         const res = await fetch(`/api/agent/${user.refCode}`);
@@ -228,7 +268,33 @@
   const message = `Join me on Testcode and earn! Use my referral link to sign up: ${link}`;
   const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
   window.open(whatsappURL, '_blank');
+
+  // Show popup
+  const popup = document.getElementById('invite-popup');
+  popup.style.display = 'block';
+  setTimeout(() => {
+    popup.style.display = 'none';
+  }, 3000);
 }
+
   </script>
+  <div id="invite-popup" style="
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #28a745;
+  color: white;
+  padding: 15px 25px;
+  border-radius: 25px;
+  font-weight: bold;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+  z-index: 999;
+  animation: fadeOut 3s forwards;
+">
+  ✅ Invite shared! Earn 20% when your friend invests!
+</div>
+
 </body>
 </html>
