@@ -99,63 +99,79 @@
   </div>
 
   <script>
-    // Redirect if already logged in
-    const existingUser = localStorage.getItem("user") || sessionStorage.getItem("user");
-    if (existingUser) {
-      window.location.href = "index.html";
+  // Redirect if already logged in
+  const existingUser = localStorage.getItem("user") || sessionStorage.getItem("user");
+  if (existingUser) {
+    window.location.href = "index.html";
+  }
+
+  document.getElementById("signupForm").addEventListener("submit", async function (e) {
+    e.preventDefault();
+
+    const fullName = document.getElementById("fullname").value.trim();
+    const email = document.getElementById("email").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const password = document.getElementById("password").value.trim();
+    const message = document.getElementById("signupMessage");
+
+    // Full name must have at least two words
+    if (fullName.split(" ").length < 2) {
+      message.textContent = "❗ Please enter your full name (at least two names).";
+      message.style.color = "red";
+      return;
     }
 
-    document.getElementById("signupForm").addEventListener("submit", async function (e) {
-  e.preventDefault();
+    // Email format validation
+    const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailPattern.test(email)) {
+      message.textContent = "❗ Enter a valid email address.";
+      message.style.color = "red";
+      return;
+    }
 
-  const fullName = document.getElementById("fullname").value.trim();
-  const email = document.getElementById("email").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const password = document.getElementById("password").value.trim();
-  const message = document.getElementById("signupMessage");
+    // Phone validation: starts with 07 or 01 and has 10 digits
+    const phonePattern = /^(07|01)\d{8}$/;
+    if (!phonePattern.test(phone)) {
+      message.textContent = "❗ Phone must start with 07 or 01 and be exactly 10 digits.";
+      message.style.color = "red";
+      return;
+    }
 
-  if (!fullName || !email || !phone || !password) {
-    message.textContent = "❗ Please fill in all fields.";
-    message.style.color = "red";
-    return;
-  }
+    if (!password) {
+      message.textContent = "❗ Please enter a password.";
+      message.style.color = "red";
+      return;
+    }
 
-  const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-  if (!emailPattern.test(email)) {
-    message.textContent = "❗ Enter a valid email address.";
-    message.style.color = "red";
-    return;
-  }
+    const ref = new URLSearchParams(window.location.search).get("ref");
 
-  const ref = new URLSearchParams(window.location.search).get("ref");
+    try {
+      const res = await fetch("/api/user/signup", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, phone, password, ref })
+      });
 
-  try {
-    const res = await fetch("/api/user/signup", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ fullName, email, phone, password, ref })
-    });
+      const data = await res.json();
 
-    const data = await res.json();
+      if (data.success && data.user) {
+        message.textContent = "✅ Signup successful!";
+        message.style.color = "green";
 
-    if (data.success && data.user) {
-      message.textContent = "✅ Signup successful!";
-      message.style.color = "green";
-
-      localStorage.setItem("user", JSON.stringify(data.user));
-      setTimeout(() => {
-        window.location.href = "index.html";
-      }, 1500);
-    } else {
-      message.textContent = "❌ " + (data.message || "Signup failed.");
+        localStorage.setItem("user", JSON.stringify(data.user));
+        setTimeout(() => {
+          window.location.href = "index.html";
+        }, 1500);
+      } else {
+        message.textContent = "❌ " + (data.message || "Signup failed.");
+        message.style.color = "red";
+      }
+    } catch (err) {
+      console.error("Error:", err);
+      message.textContent = "🚫 Server error. Please try again later.";
       message.style.color = "red";
     }
-  } catch (err) {
-    console.error("Error:", err);
-    message.textContent = "🚫 Server error. Please try again later.";
-    message.style.color = "red";
-  }
-});
+  });
   </script>
 </body>
 </html>
