@@ -174,7 +174,7 @@
   <div class="referral-box">
     <h3>Your Referral Link:</h3>
     <div class="referral-link">
-  <a href="#" id="referralLink" style="color: #001f54; text-decoration: underline;" target="_blank">Generating...</a>
+  <span id="referralLink" style="color: #001f54; text-decoration: underline;">Generating...</span>
 </div>
     <button onclick="copyReferral()">📋 Copy Referral Link</button>
 	<button class="whatsapp-btn" onclick="shareReferral()">📤 Share on WhatsApp</button>
@@ -225,8 +225,7 @@
       const referralURL = `${window.location.origin}/signup.html?ref=${user.refCode}`;
 const referralLinkElem = document.getElementById("referralLink");
 referralLinkElem.textContent = referralURL;
-referralLinkElem.href = referralURL;
-
+referralLinkElem.textContent = referralURL;
 
       try {
         const res = await fetch(`/api/agent/${user.refCode}`);
