@@ -132,7 +132,7 @@
     // Phone validation: starts with 07 or 01 and has 10 digits
     const phonePattern = /^(07|01)\d{8}$/;
     if (!phonePattern.test(phone)) {
-      message.textContent = "❗ Phone must start with 07 or 01 and be exactly 10 digits.";
+      message.textContent = "❗ Invalid phone Number.";
       message.style.color = "red";
       return;
     }
