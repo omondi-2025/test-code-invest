@@ -11,6 +11,23 @@
       --silver: #c0c0c0;
       --green: #4caf50;
     }
+	
+	.referral-banner {
+  background: linear-gradient(90deg, #00C851, #33b5e5, #007E33);
+  color: white;
+  padding: 1rem;
+  text-align: center;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border-radius: 10px;
+  margin-top: 1rem;
+  animation: popFade 0.4s ease-in-out;
+}
+
+@keyframes popFade {
+  0% { opacity: 0; transform: scale(0.95); }
+  100% { opacity: 1; transform: scale(1); }
+}
 
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -117,6 +134,10 @@
     <h3>Total Referrals: <span id="totalReferrals">0</span></h3>
     <h3>Total Commission Earned: KES <span id="totalCommission">0.00</span></h3>
   </div>
+  
+ <div class="referral-banner">
+  💸 Earn <span style="color: #FFD700;">20%</span> commission when you invite a friend who invests!
+</div>
 
   <div class="referral-box">
     <h3>Your Referral Link:</h3>
