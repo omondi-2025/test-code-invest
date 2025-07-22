@@ -143,6 +143,7 @@
     <h3>Your Referral Link:</h3>
     <div class="referral-link" id="referralLink">Generating...</div>
     <button onclick="copyReferral()">📋 Copy Referral Link</button>
+	<button onclick="shareReferral()" style="margin-left: 0.5rem; background-color: #25D366;">📤 Share on WhatsApp</button>
   </div>
 
   <table class="referral-table">
@@ -222,6 +223,12 @@
         `;
       }
     });
+	function shareReferral() {
+  const link = document.getElementById("referralLink").textContent;
+  const message = `Join me on Testcode and earn! Use my referral link to sign up: ${link}`;
+  const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
+  window.open(whatsappURL, '_blank');
+}
   </script>
 </body>
 </html>
