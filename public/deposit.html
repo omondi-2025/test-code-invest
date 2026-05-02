@@ -2,257 +2,143 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Testcode | Recharge Wallet</title>
-  <link rel="stylesheet" href="styles.css" />
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #eef4f8;
-      margin: 0;
-      padding: 1.5rem;
-    }
-
-    .container {
-      max-width: 600px;
-      margin: auto;
-      background: white;
-      padding: 2rem;
-      border-radius: 12px;
-      box-shadow: 0 6px 20px rgba(0,0,0,0.1);
-    }
-
-    h2 {
-      text-align: center;
-      color: #003366;
-      margin-bottom: 1.2rem;
-    }
-
-    .wallet {
-      text-align: center;
-      font-weight: bold;
-      margin-bottom: 1rem;
-      color: #4caf50;
-    }
-
-    .mpesa-number {
-      text-align: center;
-      font-size: 1.1rem;
-      margin: 1rem 0;
-      color: #001f4d;
-    }
-
-    textarea {
-      width: 100%;
-      padding: 1rem;
-      margin-top: 1rem;
-      border-radius: 8px;
-      border: 1px solid #ccc;
-      font-size: 1rem;
-      resize: vertical;
-      min-height: 120px;
-    }
-
-    .btn {
-      width: 100%;
-      margin-top: 1rem;
-      background-color: #003366;
-      color: white;
-      padding: 0.9rem;
-      font-size: 1rem;
-      border: none;
-      border-radius: 8px;
-      cursor: pointer;
-      transition: background 0.3s ease;
-    }
-
-    .btn:hover {
-      background-color: #001a40;
-    }
-
-    #status {
-      margin-top: 1rem;
-      text-align: center;
-      font-weight: bold;
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Villa Cash | Deposit</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-<div style="margin-bottom: 1rem;">
-  <button onclick="window.location.href='index.html'" style="
-    background-color: #003366;
-    color: white;
-    border: none;
-    padding: 0.6rem 1.2rem;
-    border-radius: 6px;
-    cursor: pointer;
-    font-weight: bold;
-  ">
-    ⬅️ Back to Homepage
-  </button>
-</div>
-  <div class="container">
-    <h2>Recharge Your Wallet</h2>
-	
-	<div style="background:#f9f9f9; border-left: 5px solid #4caf50; padding: 1rem; margin-top: 1rem; border-radius: 8px;">
-  <h4>📌 How to Deposit via M-PESA:</h4>
-  <ol>
-    <li>Go to <strong>M-Pesa OR Dial *334#</strong></li>
-    <li>Select <strong>Send Money</strong></li>
-    <li>Enter Phone Number: <strong>0102188852</strong></li>
-    <li>Enter Amount (Min: <strong>KES 200</strong>)</li>
-    <li>Complete Payment and copy the M-Pesa confirmation message</li>
-    <li>Paste it below and submit</li>
-  </ol>
-</div>
 
-    <div class="wallet">
-      💰 Current Wallet Balance: KES <span id="walletBalance">Loading...</span>
+  <header class="site-header">
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <span class="brand">Deposit</span>
+    <span></span>
+  </header>
+
+  <div class="container" style="padding-top:1rem;">
+
+    <div class="card" style="text-align:center;margin-bottom:1rem;">
+      <div style="color:var(--muted);font-size:0.85rem;">Wallet Balance</div>
+      <div style="font-size:1.8rem;font-weight:800;color:var(--primary)">
+        KES <span id="walletBalance">&mdash;</span>
+      </div>
     </div>
 
-    <p style="text-align: center;">
-      Send money to the number below using <strong>M-PESA</strong> and paste the transaction message for admin verification.
-    </p>
-    
-    <div class="mpesa-number" style="text-align: center;">
-  <label for="mpesaNumber" style="font-weight: bold; color: #003366;">📱 M-PESA Number:</label><br/>
-  <input
-    type="text"
-    id="mpesaNumber"
-    value="0102188852"
-    readonly
-    style="
-      font-weight: bold;
-      background-color: #e0f7fa;
-      color: #003366;
-      text-align: center;
-      font-size: 1.3rem;
-      margin-top: 0.5rem;
-      border: 2px solid #00796b;
-      padding: 0.7rem;
-      border-radius: 8px;
-      width: 80%;
-    "
-  />
-  <br/>
-  <button
-    onclick="copyNumber()"
-    style="
-      margin-top: 0.8rem;
-      background: #4caf50;
-      color: white;
-      border: none;
-      padding: 0.6rem 1.2rem;
-      font-weight: bold;
-      border-radius: 6px;
-      cursor: pointer;
-    "
-  >
-    📋 Copy Number
-  </button>
-</div>
+    <div class="info-banner">
+      <strong><i class="fa-solid fa-circle-info"></i> How to Deposit via M-PESA</strong>
+      <ol style="margin:0.6rem 0 0 1.2rem;padding:0;font-size:0.875rem;line-height:1.8">
+        <li>Go to <strong>M-PESA</strong> or Dial <strong>*334#</strong></li>
+        <li>Select <strong>Send Money</strong></li>
+        <li>Enter number: <strong>0102188852</strong></li>
+        <li>Enter Amount (Min <strong>KES 200</strong>)</li>
+        <li>Copy the confirmation SMS you receive</li>
+        <li>Paste it in the form below and submit</li>
+      </ol>
+    </div>
 
-<label for="manualAmount"><strong>Enter Sent Amount (KES):</strong></label>
-<input
-  type="number"
-  id="manualAmount"
-  placeholder="e.g. 500"
-  min="200"
-  style="width: 100%; padding: 0.8rem; margin-top: 0.3rem; margin-bottom: 1rem; border-radius: 8px; border: 1px solid #ccc; font-size: 1rem;"
-/>
+    <div class="card" style="text-align:center;margin-bottom:1rem;">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem">M-PESA Number</div>
+      <div style="font-size:1.5rem;font-weight:800;color:var(--primary);letter-spacing:2px">0102188852</div>
+      <button class="btn btn-accent" style="margin-top:0.6rem;padding:0.45rem 1.2rem;font-size:0.85rem" onclick="copyNumber()">
+        <i class="fa-regular fa-copy"></i> Copy Number
+      </button>
+    </div>
 
-    <textarea id="mpesaMessage" placeholder="Paste your M-PESA transaction message here..."></textarea>
-    <button class="btn" onclick="submitTransaction()">Submit for Review</button>
+    <div class="card">
+      <label style="display:block;font-weight:600;margin-bottom:0.4rem">
+        <i class="fa-solid fa-money-bill-wave" style="color:var(--success)"></i> Amount Sent (KES)
+      </label>
+      <input type="number" id="manualAmount" placeholder="e.g. 500" min="200" style="width:100%;box-sizing:border-box"/>
 
-    <div id="status"></div>
+      <label style="display:block;font-weight:600;margin:0.9rem 0 0.4rem">
+        <i class="fa-regular fa-message" style="color:var(--primary)"></i> M-PESA Confirmation SMS
+      </label>
+      <textarea id="mpesaMessage" placeholder="Paste your M-PESA transaction message here..."
+        style="width:100%;box-sizing:border-box;min-height:110px;padding:0.8rem;border:1.5px solid var(--border);border-radius:10px;font-size:0.9rem;font-family:inherit;resize:vertical"></textarea>
+
+      <div id="status" style="margin:0.6rem 0;font-weight:600;font-size:0.9rem"></div>
+
+      <button class="btn btn-primary btn-block" id="submitBtn" onclick="submitTransaction()">
+        <i class="fa-solid fa-paper-plane"></i> Submit for Review
+      </button>
+    </div>
+
   </div>
 
-    <script>
-  let user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
-if (!user || !(user.id || user._id)) {
-  window.location.href = "login.html";
-}
-const userId = user.id || user._id;
+  <nav class="bottom-nav">
+    <a href="index.html"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a href="deposit.html" class="active"><i class="fa-solid fa-circle-down"></i><span>Deposit</span></a>
+    <a href="invest.html"><i class="fa-solid fa-chart-line"></i><span>Invest</span></a>
+    <a href="withdrawal.html"><i class="fa-solid fa-circle-up"></i><span>Withdraw</span></a>
+    <a href="history.html"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></a>
+    <a href="agent.html"><i class="fa-solid fa-user-plus"></i><span>Invite</span></a>
+    <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
+  </nav>
 
-  async function fetchWallet() {
-    const walletEl = document.getElementById("walletBalance");
-    try {
-      const res = await fetch(`/api/deposit/balance/${userId}`)
-      const data = await res.json();
-      walletEl.textContent = (data.success && typeof data.wallet === "number")
-        ? data.wallet.toFixed(2)
-        : "0.00";
-    } catch {
-      walletEl.textContent = "❌ Error";
+  <script>
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
+    if (!user || !(user.id || user._id)) { window.location.href = "login.html"; }
+    const userId = user.id || user._id;
+
+    async function fetchWallet() {
+      try {
+        const res  = await fetch("/api/deposit/balance/" + userId);
+        const data = await res.json();
+        document.getElementById("walletBalance").textContent =
+          (data.success && typeof data.wallet === "number") ? data.wallet.toFixed(2) : "0.00";
+      } catch { document.getElementById("walletBalance").textContent = "Error"; }
     }
-  }
+    fetchWallet();
 
-  fetchWallet();
+    async function submitTransaction() {
+      const message  = document.getElementById("mpesaMessage").value.trim();
+      const amount   = parseFloat(document.getElementById("manualAmount").value.trim());
+      const statusEl = document.getElementById("status");
+      const btn      = document.getElementById("submitBtn");
 
-  async function submitTransaction() {
-    const message = document.getElementById("mpesaMessage").value.trim();
-const amountInput = document.getElementById("manualAmount").value.trim();
-const status = document.getElementById("status");
-const btn = document.querySelector(".btn");
-
-const amount = parseFloat(amountInput);
-
-if (!amount || isNaN(amount) || amount < 200) {
-  status.textContent = "❗ Enter a valid amount (minimum KES 200).";
-  status.style.color = "red";
-  return;
-}
-
-if (!message) {
-  status.textContent = "❗ Please paste your M-PESA transaction message.";
-  status.style.color = "red";
-  return;
-}
-    btn.disabled = true;
-    btn.textContent = "Submitting...";
-    status.textContent = "⏳ Submitting for admin approval...";
-    status.style.color = "gray";
-
-     try {
-    const res = await fetch('/api/deposit', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-  userId: user.id || user._id,
-  amount: amount,
-  message: message
-})
-    });
-      const data = await res.json();
-
-      if (data.success) {
-	    document.getElementById("manualAmount").value = "";
-        status.textContent = "✅ Submitted successfully. Wait for 5 minutes for review.";
-        status.style.color = "green";
-        document.getElementById("mpesaMessage").value = "";
-        fetchWallet(); // refresh wallet
-      } else {
-        status.textContent = "❌ " + (data.message || "Submission failed.");
-        status.style.color = "red";
+      if (!amount || isNaN(amount) || amount < 200) {
+        statusEl.textContent = "Enter a valid amount (minimum KES 200).";
+        statusEl.style.color = "var(--danger)"; return;
       }
-    } catch {
-      status.textContent = "🚫 Server error. Please try again later.";
-      status.style.color = "red";
-    } finally {
-      btn.disabled = false;
-      btn.textContent = "Submit for Review";
+      if (!message) {
+        statusEl.textContent = "Please paste your M-PESA transaction message.";
+        statusEl.style.color = "var(--danger)"; return;
+      }
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Submitting...';
+      statusEl.textContent = "Submitting for admin approval...";
+      statusEl.style.color = "var(--muted)";
+      try {
+        const res  = await fetch("/api/deposit", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ userId, amount, message })
+        });
+        const data = await res.json();
+        if (data.success) {
+          statusEl.textContent = "Submitted! Please wait up to 5 minutes for review.";
+          statusEl.style.color = "var(--success)";
+          document.getElementById("mpesaMessage").value = "";
+          document.getElementById("manualAmount").value = "";
+          fetchWallet();
+        } else {
+          statusEl.textContent = data.message || "Submission failed.";
+          statusEl.style.color = "var(--danger)";
+        }
+      } catch {
+        statusEl.textContent = "Server error. Please try again.";
+        statusEl.style.color = "var(--danger)";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-paper-plane"></i> Submit for Review';
+      }
     }
-  }
-  function copyNumber() {
-  const input = document.getElementById("mpesaNumber");
-  input.select();
-  input.setSelectionRange(0, 99999); // For mobile
-  navigator.clipboard.writeText(input.value).then(() => {
-    alert("✅ M-PESA number copied!");
-  }).catch(() => {
-    alert("❌ Failed to copy. Please copy manually.");
-  });
-}
-</script>
+
+    function copyNumber() {
+      navigator.clipboard.writeText("0102188852")
+        .then(() => alert("M-PESA number copied!"))
+        .catch(() => alert("Copy manually: 0102188852"));
+    }
+  </script>
 </body>
 </html>

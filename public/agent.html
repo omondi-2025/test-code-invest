@@ -2,298 +2,142 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Testcode | Agent Panel</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Villa Cash | Invite</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
   <style>
-    :root {
-      --darkblue: #001f54;
-      --lightblue: #e6f2ff;
-      --silver: #c0c0c0;
-      --green: #4caf50;
+    .commission-badge {
+      background: linear-gradient(135deg, var(--primary), #2d5282);
+      color: #fff; border-radius: 14px; padding: 1rem;
+      text-align: center; margin-bottom: 1rem;
     }
-	
-	.referral-banner {
-  background: linear-gradient(90deg, #00C851, #33b5e5, #007E33);
-  color: white;
-  padding: 1rem;
-  text-align: center;
-  font-size: 1.2rem;
-  font-weight: bold;
-  border-radius: 10px;
-  margin-top: 1rem;
-  animation: popFade 0.4s ease-in-out;
-}
-
-@keyframes popFade {
-  0% { opacity: 0; transform: scale(0.95); }
-  100% { opacity: 1; transform: scale(1); }
-}
-
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background-color: var(--lightblue);
-      margin: 0;
-      padding: 1rem;
+    .commission-badge .amount { font-size: 1.8rem; font-weight: 800; }
+    .ref-box {
+      background: #F1F5F9; border-radius: 10px; padding: 0.8rem 1rem;
+      font-weight: 700; word-break: break-all; font-size: 0.875rem;
+      color: var(--primary); margin-bottom: 0.8rem;
     }
-
-    header {
-      background-color: var(--darkblue);
-      color: white;
-      padding: 1rem;
-      text-align: center;
-      border-radius: 8px;
-    }
-
-    .summary, .referral-box {
-      margin-top: 1rem;
-      padding: 1rem;
-      background: white;
-      border-radius: 8px;
-      box-shadow: 0 0 8px rgba(0,0,0,0.1);
-    }
-
-    .summary h3, .referral-box h3 {
-      margin: 0.5rem 0;
-      color: var(--darkblue);
-    }
-
-    .referral-link {
-      background-color: #f1f1f1;
-      padding: 0.5rem;
-      margin-bottom: 0.5rem;
-      word-break: break-word;
-      border-radius: 5px;
-    }
-
-    .referral-box button {
-      background-color: var(--darkblue);
-      color: white;
-      border: none;
-      padding: 0.6rem 1rem;
-      border-radius: 5px;
-      cursor: pointer;
-      font-weight: bold;
-    }
-
-    .referral-box button:hover {
-      background-color: #003b8b;
-    }
-
-    .referral-table {
-      margin-top: 1rem;
-      width: 100%;
-      border-collapse: collapse;
-    }
-
-    .referral-table th, .referral-table td {
-      border: 1px solid var(--silver);
-      padding: 0.75rem;
-      text-align: left;
-    }
-
-    .referral-table th {
-      background-color: var(--darkblue);
-      color: white;
-    }
-
-    .referral-table tbody td {
-      background-color: white;
-    }
-
-    .footer-btn {
-      text-align: center;
-      margin-top: 2rem;
-    }
-
-    .footer-btn button {
-      background-color: var(--darkblue);
-      color: white;
-      padding: 0.7rem 1.5rem;
-      border: none;
-      border-radius: 6px;
-      cursor: pointer;
-    }
-
-    .footer-btn button:hover {
-      background-color: #003b8b;
-    }
-
-    @media (max-width: 600px) {
-      .referral-table th, .referral-table td {
-        font-size: 0.85rem;
-      }
-    }
-	
-	.whatsapp-btn {
-  display: inline-block;
-  background: linear-gradient(45deg, #25D366, #128C7E);
-  color: white;
-  padding: 0.8rem 1.4rem;
-  font-size: 1rem;
-  font-weight: bold;
-  border-radius: 30px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
-  animation: bounceBtn 1.8s infinite;
-  transition: transform 0.2s ease;
-}
-
-.whatsapp-btn:hover {
-  transform: scale(1.05);
-}
-
-@keyframes bounceBtn {
-  0%, 100% { transform: translateY(0); }
-  50%      { transform: translateY(-5px); }
-}
-
-@keyframes fadeOut {
-  0% { opacity: 1; }
-  80% { opacity: 1; }
-  100% { opacity: 0; }
-}
-
   </style>
 </head>
 <body>
-  <header>
-    <h2>Referral Agent Panel</h2>
+
+  <header class="site-header">
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <span class="brand">Invite &amp; Earn</span>
+    <span></span>
   </header>
 
-  <div class="summary">
-    <h3>Total Referrals: <span id="totalReferrals">0</span></h3>
-    <h3>Total Commission Earned: KES <span id="totalCommission">0.00</span></h3>
-  </div>
-  
- <div class="referral-banner">
-  💸 Earn <span style="color: #FFD700;">20%</span> commission when you invite a friend who invests!
-</div>
+  <div class="container" style="padding-top:1rem;">
 
-  <div class="referral-box">
-    <h3>Your Referral Link:</h3>
-    <div class="referral-link">
-  <span id="referralLink" style="color: #001f54; text-decoration: underline;">Generating...</span>
-</div>
-    <button onclick="copyReferral()">📋 Copy Referral Link</button>
-	<button class="whatsapp-btn" onclick="shareReferral()">📤 Share on WhatsApp</button>
-  </div>
-  <p style="margin-top: 0.8rem; color: #007E33; font-weight: bold; font-size: 1rem;">
-  📢 Invite a friend and earn <span style="color: #FFD700;">20%</span> of their first investment!
-</p>
+    <div class="commission-badge">
+      <div style="font-size:0.85rem;opacity:0.85;margin-bottom:0.2rem">Total Commission Earned</div>
+      <div class="amount">KES <span id="totalCommission">0.00</span></div>
+      <div style="font-size:0.8rem;opacity:0.75;margin-top:0.3rem"><span id="totalReferrals">0</span> referral(s)</div>
+    </div>
 
-  <table class="referral-table">
-    <thead>
-      <tr>
-        <th>Name</th>
-        <th>Email</th>
-        <th>Investment 💰</th>
-        <th>Your Commission 🎁</th>
-      </tr>
-    </thead>
-    <tbody id="referralBody">
-      <tr>
-        <td colspan="4" style="text-align: center;">Loading referrals...</td>
-      </tr>
-    </tbody>
-  </table>
+    <div class="info-banner" style="background:#F0FDF4;border-color:var(--success);color:#166534">
+      <i class="fa-solid fa-gift"></i>
+      <strong> Earn 20% commission</strong> when a friend you invite makes their first investment!
+    </div>
 
-  <div class="footer-btn">
-    <button onclick="window.location.href='index.html'">⬅️ Back to Dashboard</button>
+    <div class="card">
+      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;font-weight:600">Your Referral Link</div>
+      <div class="ref-box" id="referralLink">Generating...</div>
+      <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+        <button class="btn btn-primary" style="flex:1" onclick="copyReferral()">
+          <i class="fa-regular fa-copy"></i> Copy Link
+        </button>
+        <button class="btn btn-success" style="flex:1" onclick="shareReferral()">
+          <i class="fa-brands fa-whatsapp"></i> Share on WhatsApp
+        </button>
+      </div>
+    </div>
+
+    <p class="section-title">Referred Members</p>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="background:var(--primary);color:#fff;">
+            <th style="padding:0.75rem 0.6rem">Name</th>
+            <th style="padding:0.75rem 0.6rem">Invested</th>
+            <th style="padding:0.75rem 0.6rem">Commission</th>
+          </tr>
+        </thead>
+        <tbody id="referralBody">
+          <tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
+
+  <div id="shareToast" style="display:none;position:fixed;bottom:80px;left:50%;transform:translateX(-50%);
+    background:var(--success);color:#fff;padding:0.7rem 1.4rem;border-radius:25px;
+    font-weight:700;z-index:9999;font-size:0.875rem;">
+    <i class="fa-solid fa-check"></i> Invite shared! Earn 20% when your friend invests!
+  </div>
+
+  <nav class="bottom-nav">
+    <a href="index.html"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a href="deposit.html"><i class="fa-solid fa-circle-down"></i><span>Deposit</span></a>
+    <a href="invest.html"><i class="fa-solid fa-chart-line"></i><span>Invest</span></a>
+    <a href="withdrawal.html"><i class="fa-solid fa-circle-up"></i><span>Withdraw</span></a>
+    <a href="history.html"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></a>
+    <a href="agent.html" class="active"><i class="fa-solid fa-user-plus"></i><span>Invite</span></a>
+    <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
+  </nav>
 
   <script>
-    function copyReferral() {
-      const link = document.getElementById("referralLink").textContent;
-      navigator.clipboard.writeText(link).then(() => {
-        alert("✅ Referral link copied!");
-      }).catch(() => {
-        alert("❌ Failed to copy. Please copy manually.");
-      });
-    }
-
     document.addEventListener("DOMContentLoaded", async () => {
-      const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+      let user = null;
+      try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
+      if (!user || !user.refCode) { window.location.href = "login.html"; return; }
 
-      if (!user || !user.refCode) {
-        alert("You must be logged in to view this page.");
-        window.location.href = "login.html";
-        return;
-      }
-
-      const referralURL = `${window.location.origin}/signup.html?ref=${user.refCode}`;
-const referralLinkElem = document.getElementById("referralLink");
-referralLinkElem.textContent = referralURL;
-referralLinkElem.textContent = referralURL;
+      const referralURL = window.location.origin + "/signup.html?ref=" + user.refCode;
+      document.getElementById("referralLink").textContent = referralURL;
 
       try {
-        const res = await fetch(`/api/agent/${user.refCode}`);
+        const res  = await fetch("/api/agent/" + user.refCode);
         const data = await res.json();
-
         const tbody = document.getElementById("referralBody");
-        const totalReferrals = document.getElementById("totalReferrals");
-        const totalCommission = document.getElementById("totalCommission");
 
-        if (!data.success || !Array.isArray(data.referrals) || data.referrals.length === 0) {
-          tbody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: gray;">No referrals yet.</td></tr>`;
+        if (!data.success || !Array.isArray(data.referrals) || !data.referrals.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--muted)">No referrals yet. Share your link!</td></tr>';
           return;
         }
 
-        let commissionSum = 0;
+        let total = 0;
         tbody.innerHTML = data.referrals.map(r => {
-          commissionSum += r.commission || 0;
-          return `
-            <tr>
-              <td>${r.fullName || "-"}</td>
-              <td>${r.email || "-"}</td>
-              <td>KES ${(r.investment || 0).toFixed(2)}</td>
-              <td>KES ${(r.commission || 0).toFixed(2)}</td>
-            </tr>
-          `;
+          total += r.commission || 0;
+          return '<tr style="border-bottom:1px solid var(--border)">' +
+            '<td style="padding:0.65rem 0.6rem">' + (r.fullName || "-") + '</td>' +
+            '<td style="padding:0.65rem 0.6rem">KES ' + (r.investment || 0).toFixed(2) + '</td>' +
+            '<td style="padding:0.65rem 0.6rem;color:var(--success);font-weight:700">KES ' + (r.commission || 0).toFixed(2) + '</td>' +
+          '</tr>';
         }).join("");
 
-        totalReferrals.textContent = data.referrals.length;
-        totalCommission.textContent = commissionSum.toFixed(2);
-      } catch (err) {
-        console.error("Error loading referrals:", err);
-        document.getElementById("referralBody").innerHTML = `
-          <tr><td colspan="6" style="text-align: center; color: red;">❌ Failed to load referral data.</td></tr>
-        `;
+        document.getElementById("totalReferrals").textContent   = data.referrals.length;
+        document.getElementById("totalCommission").textContent  = total.toFixed(2);
+      } catch {
+        document.getElementById("referralBody").innerHTML =
+          '<tr><td colspan="3" style="text-align:center;color:var(--danger);padding:1rem">Failed to load referral data.</td></tr>';
       }
     });
-	function shareReferral() {
-  const link = document.getElementById("referralLink").textContent;
-  const message = `Join me on Testcode and earn! Use my referral link to sign up: ${link}`;
-  const whatsappURL = `https://wa.me/?text=${encodeURIComponent(message)}`;
-  window.open(whatsappURL, '_blank');
 
-  // Show popup
-  const popup = document.getElementById('invite-popup');
-  popup.style.display = 'block';
-  setTimeout(() => {
-    popup.style.display = 'none';
-  }, 3000);
-}
+    function copyReferral() {
+      const link = document.getElementById("referralLink").textContent;
+      navigator.clipboard.writeText(link).then(() => alert("Referral link copied!")).catch(() => alert("Copy manually: " + link));
+    }
 
+    function shareReferral() {
+      const link = document.getElementById("referralLink").textContent;
+      const msg  = "Join me on Villa Cash and earn! Sign up with my referral link: " + link;
+      window.open("https://wa.me/?text=" + encodeURIComponent(msg), "_blank");
+      const toast = document.getElementById("shareToast");
+      toast.style.display = "block";
+      setTimeout(() => { toast.style.display = "none"; }, 3000);
+    }
   </script>
-  <div id="invite-popup" style="
-  display: none;
-  position: fixed;
-  bottom: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: #28a745;
-  color: white;
-  padding: 15px 25px;
-  border-radius: 25px;
-  font-weight: bold;
-  box-shadow: 0 4px 10px rgba(0,0,0,0.2);
-  z-index: 999;
-  animation: fadeOut 3s forwards;
-">
-  ✅ Invite shared! Earn 20% when your friend invests!
-</div>
-
 </body>
 </html>

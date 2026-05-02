@@ -2,8 +2,123 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Testcode | Sign Up</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Villa Cash | Sign Up</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="logo">
+        <h1>VILLA <span>CASH</span></h1>
+        <p>Create your free account</p>
+      </div>
+
+      <h2>Get Started</h2>
+
+      <form id="signupForm" novalidate>
+        <div class="field">
+          <i class="fa-solid fa-user"></i>
+          <input type="text" id="fullname" placeholder="Full Name" autocomplete="name" required />
+        </div>
+
+        <div class="field">
+          <i class="fa-regular fa-envelope"></i>
+          <input type="email" id="email" placeholder="Email address" autocomplete="email" required />
+        </div>
+
+        <div class="field">
+          <i class="fa-solid fa-phone"></i>
+          <input type="tel" id="phone" placeholder="Phone (07XXXXXXXX)" autocomplete="tel" required />
+        </div>
+
+        <div class="field">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="password" placeholder="Password (min 6 chars)" autocomplete="new-password" required />
+        </div>
+
+        <div class="msg" id="signupMessage"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="signupBtn">
+          <i class="fa-solid fa-user-plus"></i> Create Account
+        </button>
+      </form>
+
+      <div class="switch-link">
+        Already have an account? <a href="login.html">Login</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
+      if (u && u.id) window.location.href = "index.html";
+    } catch(e) {
+      localStorage.removeItem("user"); sessionStorage.removeItem("user");
+    }
+
+    const form      = document.getElementById("signupForm");
+    const msgEl     = document.getElementById("signupMessage");
+    const signupBtn = document.getElementById("signupBtn");
+
+    function setMsg(text, color) { msgEl.textContent = text; msgEl.style.color = color; }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+
+      const fullName = document.getElementById("fullname").value.trim();
+      const email    = document.getElementById("email").value.trim();
+      const phone    = document.getElementById("phone").value.trim();
+      const password = document.getElementById("password").value;
+
+      if (fullName.split(" ").filter(Boolean).length < 2) {
+        setMsg("Please enter your full name (first and last).", "#EF4444"); return;
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        setMsg("Enter a valid email address.", "#EF4444"); return;
+      }
+      if (!/^(07|01)\d{8}$/.test(phone)) {
+        setMsg("Phone must start with 07 or 01 and be 10 digits.", "#EF4444"); return;
+      }
+      if (password.length < 6) {
+        setMsg("Password must be at least 6 characters.", "#EF4444"); return;
+      }
+
+      const ref = new URLSearchParams(window.location.search).get("ref");
+
+      signupBtn.disabled = true;
+      signupBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating account…';
+      setMsg("", "");
+
+      try {
+        const res  = await fetch("/api/user/signup", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ fullName, email, phone, password, ref })
+        });
+        const data = await res.json();
+
+        if (data.success && data.user) {
+          setMsg("Account created! Redirecting…", "#10B981");
+          localStorage.setItem("user", JSON.stringify(data.user));
+          setTimeout(() => { window.location.href = "index.html"; }, 900);
+        } else {
+          setMsg(data.message || "Signup failed.", "#EF4444");
+          signupBtn.disabled = false;
+          signupBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account';
+        }
+      } catch(err) {
+        setMsg("Server error. Please try again.", "#EF4444");
+        signupBtn.disabled = false;
+        signupBtn.innerHTML = '<i class="fa-solid fa-user-plus"></i> Create Account';
+      }
+    });
+  </script>
+</body>
+</html>
   <style>
     :root {
       --yellow: #ffeb3b;
@@ -168,7 +283,7 @@
       }
     } catch (err) {
       console.error("Error:", err);
-      message.textContent = "🚫 Server error. Please try again later.";
+      message.textContent = "Server error. Please try again later.";
       message.style.color = "red";
     }
   });

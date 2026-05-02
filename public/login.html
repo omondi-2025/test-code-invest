@@ -2,14 +2,105 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Testcode | Login</title>
-  <style>
-    :root {
-      --yellow: #ffeb3b;
-      --lightblue: #add8e6;
-      --darkblue: #001f54;
-      --purple: #800080;
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Villa Cash | Login</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
+  <!-- page-specific overrides only -->
+</head>
+<body>
+  <div class="auth-wrapper">
+    <div class="auth-card">
+
+      <div class="logo">
+        <h1>VILLA <span>CASH</span></h1>
+        <p>Smart Investments, Real Returns</p>
+      </div>
+
+      <h2>Welcome Back</h2>
+
+      <form id="loginForm" novalidate>
+        <div class="field">
+          <i class="fa-regular fa-envelope"></i>
+          <input type="email" id="email" placeholder="Email address" autocomplete="email" required />
+        </div>
+
+        <div class="field">
+          <i class="fa-solid fa-lock"></i>
+          <input type="password" id="password" placeholder="Password" autocomplete="current-password" required />
+        </div>
+
+        <div class="remember-row">
+          <input type="checkbox" id="rememberMe" />
+          <label for="rememberMe">Remember me on this device</label>
+        </div>
+
+        <div class="msg" id="loginMessage"></div>
+
+        <button type="submit" class="btn btn-primary btn-block" id="loginBtn">
+          <i class="fa-solid fa-right-to-bracket"></i> Login
+        </button>
+      </form>
+
+      <div class="switch-link">
+        Don't have an account? <a href="signup.html">Sign Up</a>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    try {
+      const u = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
+      if (u && u.id && u.email) window.location.href = "index.html";
+    } catch(e) {
+      localStorage.removeItem("user"); sessionStorage.removeItem("user");
+    }
+
+    const form     = document.getElementById("loginForm");
+    const msgEl    = document.getElementById("loginMessage");
+    const loginBtn = document.getElementById("loginBtn");
+
+    function setMsg(text, color) { msgEl.textContent = text; msgEl.style.color = color; }
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email      = document.getElementById("email").value.trim();
+      const password   = document.getElementById("password").value;
+      const rememberMe = document.getElementById("rememberMe").checked;
+
+      if (!email || !password) { setMsg("Please fill in all fields.", "#EF4444"); return; }
+
+      loginBtn.disabled = true;
+      loginBtn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Logging in…';
+      setMsg("", "");
+
+      try {
+        const res  = await fetch("/api/user/login", {
+          method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ email, password })
+        });
+        const data = await res.json();
+
+        if (data.success && data.user) {
+          setMsg("Login successful! Redirecting…", "#10B981");
+          const storage = rememberMe ? localStorage : sessionStorage;
+          storage.setItem("user", JSON.stringify(data.user));
+          setTimeout(() => { window.location.href = "index.html"; }, 700);
+        } else {
+          setMsg(data.message || "Invalid email or password.", "#EF4444");
+          loginBtn.disabled = false;
+          loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
+        }
+      } catch(err) {
+        setMsg("Server error. Please try again.", "#EF4444");
+        loginBtn.disabled = false;
+        loginBtn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Login';
+      }
+    });
+  </script>
+</body>
+</html>
       --pink: #ff69b4;
       --silver: #c0c0c0;
     }
@@ -172,7 +263,7 @@
         }
       } catch (error) {
         console.error("Login Error:", error);
-        message.textContent = "🚫 Server error. Try again later.";
+        message.textContent = "Server error. Please try again later.";
         message.style.color = "red";
       }
     });

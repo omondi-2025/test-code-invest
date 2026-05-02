@@ -1,162 +1,291 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Admin Dashboard</title>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f0f2f5;
-      padding: 20px;
-    }
-    h1 {
-      text-align: center;
-      color: #333;
-    }
-    .section {
-      margin-top: 40px;
-      background: #ffffff;
-      padding: 20px;
-      border-radius: 10px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-    }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 10px;
-    }
-    th, td {
-      padding: 12px;
-      border-bottom: 1px solid #ddd;
-      text-align: left;
-    }
-    th {
-      background-color: #007bff;
-      color: white;
-    }
-    tr:hover {
-      background-color: #f1f1f1;
-    }
-    button {
-      padding: 6px 12px;
-      border: none;
-      background-color: #28a745;
-      color: white;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #218838;
-    }
-    .danger {
-      background-color: #dc3545;
-    }
-    .danger:hover {
-      background-color: #c82333;
-    }
-  </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Villa Cash | Admin</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+  <link rel="stylesheet" href="styles.css">
 </head>
-<body>
-  <h1>✨ Admin Control Dashboard</h1>
+<body class="admin-page">
 
-  <div class="section">
-    <h2>📤 Pending Withdrawal Requests</h2>
-    <table id="withdrawalTable">
-      <thead>
-        <tr><th>Name</th><th>Phone</th><th>Amount</th><th>Status</th><th>Action</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
+<!-- LOGIN SCREEN -->
+<div id="loginScreen" class="admin-login-wrapper">
+  <div class="admin-login-card">
+    <div class="brand-logo">
+      <i class="fa-solid fa-building-columns"></i>
+      <span>VILLA CASH</span>
+    </div>
+    <h2>Admin Portal &mdash; Sign In</h2>
+
+    <div class="field">
+      <label for="adminUser">Username</label>
+      <div class="input-wrap">
+        <i class="fa-solid fa-user"></i>
+        <input type="text" id="adminUser" placeholder="Enter username" autocomplete="username">
+      </div>
+    </div>
+
+    <div class="field">
+      <label for="adminPass">Password</label>
+      <div class="input-wrap">
+        <i class="fa-solid fa-lock"></i>
+        <input type="password" id="adminPass" placeholder="Enter password" autocomplete="current-password">
+        <button class="toggle-pw" type="button" onclick="togglePw()">
+          <i id="pwEye" class="fa-solid fa-eye"></i>
+        </button>
+      </div>
+    </div>
+
+    <p class="error-msg" id="loginError"></p>
+    <button class="btn btn-primary btn-block" id="loginBtn" onclick="adminLogin()">
+      <i class="fa-solid fa-right-to-bracket"></i> Sign In
+    </button>
   </div>
+</div>
 
-  <div class="section">
-    <h2>📥 Pending Deposits (Recharge)</h2>
-    <table id="depositTable">
-      <thead>
-        <tr><th>Name</th><th>Phone</th><th>Amount</th><th>Message</th><th>Status</th><th>Action</th></tr>
-      </thead>
-      <tbody></tbody>
-    </table>
-  </div>
+<!-- DASHBOARD -->
+<div id="dashboardScreen" style="display:none">
 
-  <script>
-    const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
-    if (!user || user.role !== 'admin') {
-      alert("Access Denied: Admins only.");
-      window.location.href = "/login.html";
+  <header class="admin-topbar">
+    <div class="brand">
+      <i class="fa-solid fa-building-columns"></i>
+      <strong> VILLA CASH</strong>
+      <span style="font-size:.8rem;opacity:.75;margin-left:.4rem">Admin</span>
+    </div>
+    <button class="btn btn-danger" style="padding:.4rem .9rem;font-size:.8rem" onclick="adminLogout()">
+      <i class="fa-solid fa-right-from-bracket"></i> Logout
+    </button>
+  </header>
+
+  <main class="admin-body">
+
+    <section class="admin-section">
+      <h2><i class="fa-solid fa-arrow-down-to-bracket"></i> Pending Deposits</h2>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Date</th><th>User ID</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="depositsBody">
+            <tr class="empty-row"><td colspan="5">Loading&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <h2><i class="fa-solid fa-arrow-up-from-bracket"></i> Pending Withdrawals</h2>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Date</th><th>User ID</th><th>Phone</th><th>Amount</th><th>Status</th><th>Action</th></tr>
+          </thead>
+          <tbody id="withdrawalsBody">
+            <tr class="empty-row"><td colspan="6">Loading&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
+      <h2><i class="fa-solid fa-users"></i> Registered Users</h2>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Name</th><th>Email</th><th>Phone</th><th>Wallet (KES)</th></tr>
+          </thead>
+          <tbody id="usersBody">
+            <tr class="empty-row"><td colspan="4">Loading&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+  </main>
+</div>
+
+<script>
+  // helpers
+  function getToken() { return sessionStorage.getItem('adminToken') || ''; }
+  function authHeaders() {
+    return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
+  }
+
+  // on load
+  window.addEventListener('DOMContentLoaded', function() {
+    if (getToken()) showDashboard();
+    document.getElementById('adminPass').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') adminLogin();
+    });
+    document.getElementById('adminUser').addEventListener('keydown', function(e) {
+      if (e.key === 'Enter') document.getElementById('adminPass').focus();
+    });
+  });
+
+  // toggle password visibility
+  function togglePw() {
+    var inp = document.getElementById('adminPass');
+    var eye = document.getElementById('pwEye');
+    if (inp.type === 'password') {
+      inp.type = 'text';
+      eye.className = 'fa-solid fa-eye-slash';
+    } else {
+      inp.type = 'password';
+      eye.className = 'fa-solid fa-eye';
+    }
+  }
+
+  // login
+  async function adminLogin() {
+    var username = document.getElementById('adminUser').value.trim();
+    var password = document.getElementById('adminPass').value;
+    var errEl = document.getElementById('loginError');
+    var btn = document.getElementById('loginBtn');
+
+    errEl.textContent = '';
+    if (!username || !password) {
+      errEl.textContent = 'Please enter both username and password.';
+      return;
     }
 
-    async function loadDashboard() {
-      try {
-        const res = await fetch('/api/admin/dashboard')
-        const data = await res.json();
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Signing in&hellip;';
 
-        const withdrawalBody = document.querySelector('#withdrawalTable tbody');
-        withdrawalBody.innerHTML = '';
-        data.pendingWithdrawals?.forEach(w => {
-          const u = data.users?.find(u => u._id === w.user || u._id === w.userId);
-          withdrawalBody.innerHTML += `
-            <tr>
-              <td>${u?.fullName || 'Unknown'}</td>
-              <td>${u?.phone || '-'}</td>
-              <td>Ksh ${w.amount}</td>
-              <td>${w.status}</td>
-              <td>
-                <button onclick="approveWithdrawal('${w._id}')">Approve</button>
-                <button class="danger" onclick="rejectWithdrawal('${w._id}')">Reject</button>
-              </td>
-            </tr>`;
-        });
+    try {
+      var res = await fetch('/api/admin/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username, password: password })
+      });
+      var data = await res.json();
 
-        const depositBody = document.querySelector('#depositTable tbody');
-        depositBody.innerHTML = '';
-        data.pendingDeposits?.forEach(d => {
-          const u = data.users?.find(u => u._id === d.user || u._id === d.userId);
-          depositBody.innerHTML += `
-            <tr>
-              <td>${u?.fullName || 'Unknown'}</td>
-              <td>${u?.phone || '-'}</td>
-              <td>Ksh ${d.amount}</td>
-              <td>${d.message?.slice(0, 80) || '-'}</td>
-              <td>${d.status}</td>
-              <td>
-                <button onclick="approveDeposit('${d._id}')">Approve</button>
-              </td>
-            </tr>`;
-        });
-
-      } catch (err) {
-        alert("Error loading dashboard");
-        console.error(err);
+      if (res.ok && data.success) {
+        sessionStorage.setItem('adminToken', data.token);
+        showDashboard();
+      } else {
+        errEl.textContent = data.message || 'Invalid credentials.';
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
       }
+    } catch (e) {
+      errEl.textContent = 'Network error. Please try again.';
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-right-to-bracket"></i> Sign In';
     }
+  }
 
-    async function approveDeposit(id) {
-      if (!confirm('Confirm approving this deposit?')) return;
-      const res = await fetch(`/api/admin/approve-deposit/${id}`, { method: 'POST' })
-      const data = await res.json();
-      alert(data.message);
-      loadDashboard();
-    }
+  // logout
+  function adminLogout() {
+    sessionStorage.removeItem('adminToken');
+    document.getElementById('dashboardScreen').style.display = 'none';
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('adminUser').value = '';
+    document.getElementById('adminPass').value = '';
+    document.getElementById('loginError').textContent = '';
+  }
 
-    async function approveWithdrawal(id) {
-      if (!confirm('Confirm approving this withdrawal?')) return;
-      const res = await fetch(`/api/admin/approve-withdrawal/${id}`, { method: 'POST' });
-      const data = await res.json();
-      alert(data.message);
-      loadDashboard();
-    }
-
-    async function rejectWithdrawal(id) {
-      if (!confirm('Reject this withdrawal request?')) return;
-      const res = await fetch(`/api/admin/reject-withdrawal/${id}`, { method: 'POST' });
-      const data = await res.json();
-      alert(data.message);
-      loadDashboard();
-    }
-
+  // show dashboard
+  function showDashboard() {
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboardScreen').style.display = 'block';
     loadDashboard();
-  </script>
+  }
+
+  // load data
+  async function loadDashboard() {
+    try {
+      var res = await fetch('/api/admin/dashboard', { headers: authHeaders() });
+      if (res.status === 401) { adminLogout(); return; }
+      var data = await res.json();
+      renderDeposits(data.pendingDeposits || []);
+      renderWithdrawals(data.pendingWithdrawals || []);
+      renderUsers(data.users || []);
+    } catch (e) {
+      console.error('Dashboard load failed', e);
+    }
+  }
+
+  // render deposits
+  function renderDeposits(rows) {
+    var tbody = document.getElementById('depositsBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="5">No pending deposits</td></tr>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(d) {
+      var dateStr = new Date(d.date || d.createdAt).toLocaleDateString();
+      var approveBtn = d.status === 'pending'
+        ? '<button class="btn btn-success" style="padding:.35rem .75rem;font-size:.78rem" onclick="approveDeposit(\'' + d._id + '\')"><i class="fa-solid fa-check"></i> Approve</button>'
+        : '';
+      html += '<tr><td>' + dateStr + '</td><td>' + (d.user || '-') + '</td>' +
+              '<td class="amount">KES ' + (d.amount || 0).toLocaleString() + '</td>' +
+              '<td><span class="badge badge-' + d.status + '">' + d.status + '</span></td>' +
+              '<td><div class="action-btns">' + approveBtn + '</div></td></tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // render withdrawals
+  function renderWithdrawals(rows) {
+    var tbody = document.getElementById('withdrawalsBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="6">No pending withdrawals</td></tr>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(w) {
+      var dateStr = new Date(w.date || w.createdAt).toLocaleDateString();
+      var btns = '';
+      if (w.status === 'pending') {
+        btns = '<button class="btn btn-success" style="padding:.35rem .75rem;font-size:.78rem" onclick="approveWithdrawal(\'' + w._id + '\')"><i class="fa-solid fa-check"></i> Approve</button>' +
+               '<button class="btn btn-danger" style="padding:.35rem .75rem;font-size:.78rem;margin-left:.4rem" onclick="rejectWithdrawal(\'' + w._id + '\')"><i class="fa-solid fa-xmark"></i> Reject</button>';
+      }
+      html += '<tr><td>' + dateStr + '</td><td>' + (w.user || '-') + '</td>' +
+              '<td>' + (w.phone || '-') + '</td>' +
+              '<td class="amount">KES ' + (w.amount || 0).toLocaleString() + '</td>' +
+              '<td><span class="badge badge-' + w.status + '">' + w.status + '</span></td>' +
+              '<td><div class="action-btns">' + btns + '</div></td></tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // render users
+  function renderUsers(rows) {
+    var tbody = document.getElementById('usersBody');
+    if (!rows.length) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="4">No users found</td></tr>';
+      return;
+    }
+    var html = '';
+    rows.forEach(function(u) {
+      html += '<tr><td>' + (u.fullName || '-') + '</td>' +
+              '<td>' + (u.email || '-') + '</td>' +
+              '<td>' + (u.phone || '-') + '</td>' +
+              '<td class="amount">KES ' + (u.wallet || 0).toLocaleString() + '</td></tr>';
+    });
+    tbody.innerHTML = html;
+  }
+
+  // actions
+  async function approveDeposit(id) {
+    if (!confirm('Approve this deposit?')) return;
+    var res = await fetch('/api/admin/approve-deposit/' + id, { method: 'POST', headers: authHeaders() });
+    if (res.ok) { loadDashboard(); } else { alert((await res.json()).message || 'Error'); }
+  }
+
+  async function approveWithdrawal(id) {
+    if (!confirm('Approve this withdrawal?')) return;
+    var res = await fetch('/api/admin/approve-withdrawal/' + id, { method: 'POST', headers: authHeaders() });
+    if (res.ok) { loadDashboard(); } else { alert((await res.json()).message || 'Error'); }
+  }
+
+  async function rejectWithdrawal(id) {
+    if (!confirm('Reject this withdrawal?')) return;
+    var res = await fetch('/api/admin/reject-withdrawal/' + id, { method: 'POST', headers: authHeaders() });
+    if (res.ok) { loadDashboard(); } else { alert((await res.json()).message || 'Error'); }
+  }
+</script>
 </body>
 </html>

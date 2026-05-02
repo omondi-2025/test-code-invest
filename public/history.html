@@ -2,168 +2,97 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <title>History | Testcode</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <style>
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f8fc;
-      margin: 0;
-      padding: 2rem;
-    }
-
-    h2 {
-      text-align: center;
-      color: #003366;
-      margin-bottom: 1rem;
-    }
-
-    .history-container {
-      max-width: 800px;
-      margin: auto;
-      background: #fff;
-      padding: 2rem;
-      border-radius: 10px;
-      box-shadow: 0 0 12px rgba(0,0,0,0.1);
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 1rem;
-    }
-
-    th, td {
-      padding: 12px;
-      border: 1px solid #ccc;
-      text-align: left;
-    }
-
-    th {
-      background-color: #003366;
-      color: white;
-    }
-
-    td.status {
-      text-transform: capitalize;
-      font-weight: bold;
-    }
-
-    .btn {
-      display: inline-block;
-      margin-top: 2rem;
-      padding: 0.7rem 1.5rem;
-      background: #003366;
-      color: white;
-      border: none;
-      border-radius: 5px;
-      text-decoration: none;
-      text-align: center;
-    }
-
-    .btn:hover {
-      background: #005299;
-    }
-
-    @media (max-width: 600px) {
-      table, thead, tbody, th, td, tr {
-        font-size: 0.9rem;
-      }
-    }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <title>Villa Cash | History</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <link rel="stylesheet" href="styles.css"/>
 </head>
 <body>
-  <div class="history-container">
-    <h2>📜 Account History</h2>
 
-    <table id="historyTable">
-      <thead>
-        <tr>
-          <th>Type</th>
-          <th>Amount (KES)</th>
-          <th>Status</th>
-          <th>Date</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr><td colspan="4" style="text-align:center;">Loading history...</td></tr>
-      </tbody>
-    </table>
+  <header class="site-header">
+    <a href="index.html" class="back-btn"><i class="fa-solid fa-arrow-left"></i></a>
+    <span class="brand">History</span>
+    <span></span>
+  </header>
 
-    <a href="index.html" class="btn">⬅️ Back to Dashboard</a>
+  <div class="container" style="padding-top:1rem;">
+
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="background:var(--primary);color:#fff;">
+            <th style="padding:0.75rem 0.6rem;text-align:left">Type</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Amount</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Status</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Date</th>
+          </tr>
+        </thead>
+        <tbody id="historyBody">
+          <tr><td colspan="4" style="text-align:center;padding:1.2rem;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
+  <nav class="bottom-nav">
+    <a href="index.html"><i class="fa-solid fa-house"></i><span>Home</span></a>
+    <a href="deposit.html"><i class="fa-solid fa-circle-down"></i><span>Deposit</span></a>
+    <a href="invest.html"><i class="fa-solid fa-chart-line"></i><span>Invest</span></a>
+    <a href="withdrawal.html"><i class="fa-solid fa-circle-up"></i><span>Withdraw</span></a>
+    <a href="history.html" class="active"><i class="fa-solid fa-clock-rotate-left"></i><span>History</span></a>
+    <a href="agent.html"><i class="fa-solid fa-user-plus"></i><span>Invite</span></a>
+    <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
+  </nav>
+
   <script>
-  const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
-  const tableBody = document.querySelector("#historyTable tbody");
+    let user = null;
+    try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
+    if (!user || !(user.id || user._id)) { window.location.href = "login.html"; }
+    const userId = user.id || user._id;
 
-  if (!user || !(user.id || user._id)) {
-    window.location.href = "login.html";
-  }
+    async function loadHistory() {
+      const tbody = document.getElementById("historyBody");
+      try {
+        const [wRes, dRes] = await Promise.all([
+          fetch("/api/withdraw?userId=" + userId),
+          fetch("/api/deposit?userId=" + userId)
+        ]);
+        const [wData, dData] = await Promise.all([wRes.json(), dRes.json()]);
 
-  const userId = user.id || user._id;
+        const withdrawals = (wData.success && wData.history)
+          ? wData.history.map(i => ({ type: "Withdrawal", amount: i.amount, status: i.status, date: i.date }))
+          : [];
+        const deposits = (dData.success && dData.deposits)
+          ? dData.deposits.map(i => ({ type: "Deposit", amount: i.amount, status: i.status || "completed", date: i.date }))
+          : [];
 
-  async function loadHistory() {
-    try {
-     const [withdrawalRes, depositRes] = await Promise.all([
-  fetch(`/api/withdraw?userId=${userId}`),
-  fetch(`/api/deposit?userId=${userId}`)
-]);
+        const combined = [...withdrawals, ...deposits].sort((a, b) => new Date(b.date) - new Date(a.date));
 
+        if (!combined.length) {
+          tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1.2rem;color:var(--muted)">No transactions yet.</td></tr>';
+          return;
+        }
 
-      const [withdrawalData, depositData] = await Promise.all([
-        withdrawalRes.json(),
-        depositRes.json()
-      ]);
-
-      const withdrawals = withdrawalData.success && withdrawalData.history
-        ? withdrawalData.history.map(item => ({
-            type: 'Withdrawal',
-            amount: item.amount,
-            status: item.status,
-            date: item.date
-          }))
-        : [];
-
-      const deposits = depositData.success && depositData.deposits
-        ? depositData.deposits.map(item => ({
-            type: 'Recharge',
-            amount: item.amount,
-            status: item.status || 'completed',
-            date: item.date
-          }))
-        : [];
-
-      const combined = [...withdrawals, ...deposits].sort((a, b) => new Date(b.date) - new Date(a.date));
-
-      if (combined.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:gray;">No history found yet.</td></tr>`;
-        return;
+        tbody.innerHTML = combined.map(e => {
+          const color = e.status === "approved" || e.status === "completed"
+            ? "var(--success)" : e.status === "pending" ? "var(--secondary)" : "var(--danger)";
+          const icon  = e.type === "Deposit"
+            ? '<i class="fa-solid fa-circle-down" style="color:var(--success)"></i>'
+            : '<i class="fa-solid fa-circle-up" style="color:var(--primary)"></i>';
+          return '<tr style="border-bottom:1px solid var(--border)">' +
+            '<td style="padding:0.65rem 0.6rem">' + icon + ' ' + e.type + '</td>' +
+            '<td style="padding:0.65rem 0.6rem">KES ' + (e.amount || 0).toFixed(2) + '</td>' +
+            '<td style="padding:0.65rem 0.6rem;color:' + color + ';font-weight:700">' + e.status + '</td>' +
+            '<td style="padding:0.65rem 0.6rem">' + (e.date ? new Date(e.date).toLocaleDateString() : "—") + '</td>' +
+          '</tr>';
+        }).join("");
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;padding:1rem;color:var(--danger)">Failed to load history.</td></tr>';
       }
-
-      tableBody.innerHTML = combined.map(entry => {
-        const date = entry.date ? new Date(entry.date).toLocaleString() : '—';
-        const statusColor = entry.status === 'approved' || entry.status === 'completed' ? 'green'
-                            : entry.status === 'pending' ? 'orange'
-                            : 'red';
-
-        return `
-          <tr>
-            <td>${entry.type}</td>
-            <td>${(entry.amount || 0).toFixed(2)}</td>
-            <td class="status" style="color: ${statusColor}">${entry.status}</td>
-            <td>${date}</td>
-          </tr>
-        `;
-      }).join("");
-
-    } catch (error) {
-      console.error("Error loading history:", error);
-      tableBody.innerHTML = `<tr><td colspan="4" style="text-align:center;color:red;">❌ Failed to load history. Try again later.</td></tr>`;
     }
-  }
 
-  loadHistory();
-</script>
+    loadHistory();
+  </script>
 </body>
 </html>
