@@ -81,9 +81,9 @@
     document.getElementById("plansContainer").innerHTML = plans.map(p => `
       <div class="plan-card" id="plan${p.id}">
         <div style="font-size:1.1rem;font-weight:800;color:var(--primary)">KES ${p.amount.toLocaleString()}</div>
-        <div style="font-size:0.8rem;color:var(--muted);margin:0.3rem 0">25% profit &bull; 100 days</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin:0.3rem 0">25% daily return &bull; 100 days</div>
         <div style="font-size:0.85rem;color:var(--success);font-weight:700;margin-bottom:0.6rem">
-          <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.0025).toFixed(2)}
+          <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.25).toFixed(2)}
         </div>
         <button class="btn btn-primary" style="width:100%;padding:0.55rem" onclick="invest(${p.id}, ${p.amount})">
           <i class="fa-solid fa-chart-line"></i> Invest

@@ -1,0 +1,12 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Villa Cash icon">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#1E3A5F"/>
+      <stop offset="1" stop-color="#2F5C8F"/>
+    </linearGradient>
+  </defs>
+  <rect width="192" height="192" rx="36" fill="url(#g)"/>
+  <circle cx="96" cy="96" r="56" fill="#F59E0B" opacity="0.18"/>
+  <path d="M58 118l18-45h13l18 45h-12l-3-9H73l-3 9H58zm19-19h11l-5-17-6 17z" fill="#fff"/>
+  <path d="M111 80h22v10h-22zM111 99h22v10h-22z" fill="#fff"/>
+</svg>

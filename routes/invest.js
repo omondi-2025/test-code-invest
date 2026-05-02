@@ -113,6 +113,12 @@ cron.schedule("* * * * *", async () => {
 
     for (const inv of investments) {
       const now = new Date();
+      if (new Date(inv.endDate) <= now) {
+        inv.status = "Completed";
+        await inv.save();
+        continue;
+      }
+
       const last = inv.lastEarned ? new Date(inv.lastEarned) : new Date(inv.startDate);
       const hoursPassed = (now.getTime() - last.getTime()) / (1000 * 60 * 60);
 

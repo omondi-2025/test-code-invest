@@ -549,3 +549,93 @@ input:focus, textarea:focus, select:focus {
 .badge-pending  { background: #FEF3C7; color: #92400E; }
 .badge-approved { background: #D1FAE5; color: #065F46; }
 .badge-rejected { background: #FEE2E2; color: #991B1B; }
+
+/* ── Profile ───────────────────────────────────────────────────────────── */
+.profile-container { padding-top: 1rem; }
+
+.profile-summary-card {
+  text-align: center;
+  margin-bottom: 1rem;
+}
+
+.profile-avatar {
+  width: 72px;
+  height: 72px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary), var(--purple));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #fff;
+  margin: 0 auto 0.8rem;
+}
+
+.profile-display-name {
+  font-size: 1.2rem;
+  font-weight: 800;
+}
+
+.profile-display-email {
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid var(--border);
+  font-size: 0.9rem;
+}
+
+.info-row:last-child { border-bottom: none; }
+
+.info-row .label {
+  color: var(--muted);
+  font-size: 0.8rem;
+}
+
+.info-row .value {
+  font-weight: 600;
+  color: var(--text);
+}
+
+.referral-title {
+  font-size: 0.8rem;
+  color: var(--muted);
+  margin-bottom: 0.4rem;
+  font-weight: 600;
+}
+
+.referral-link-box {
+  background: #F1F5F9;
+  border-radius: 8px;
+  padding: 0.7rem;
+  font-size: 0.8rem;
+  word-break: break-all;
+  color: var(--primary);
+  font-weight: 700;
+  margin-bottom: 0.7rem;
+}
+
+.profile-section-title {
+  padding: 0;
+  margin-bottom: 0.7rem;
+}
+
+.app-download-card { margin-bottom: 1.25rem; }
+
+.app-download-text {
+  margin: 0 0 0.9rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.install-hint {
+  margin: 0.8rem 0 0;
+  font-size: 0.8rem;
+  color: var(--muted);
+  text-align: center;
+}

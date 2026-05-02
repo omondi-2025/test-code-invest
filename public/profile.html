@@ -3,25 +3,11 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+  <meta name="theme-color" content="#1E3A5F"/>
   <title>Villa Cash | Profile</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
-  <style>
-    .profile-avatar {
-      width: 72px; height: 72px; border-radius: 50%;
-      background: linear-gradient(135deg, var(--primary), var(--purple));
-      display: flex; align-items: center; justify-content: center;
-      font-size: 2rem; color: #fff; margin: 0 auto 0.8rem;
-    }
-    .info-row {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 0.75rem 0; border-bottom: 1px solid var(--border);
-      font-size: 0.9rem;
-    }
-    .info-row:last-child { border-bottom: none; }
-    .info-row .label { color: var(--muted); font-size: 0.8rem; }
-    .info-row .value { font-weight: 600; color: var(--text); }
-  </style>
+  <link rel="manifest" href="manifest.webmanifest"/>
 </head>
 <body>
 
@@ -31,12 +17,12 @@
     <span></span>
   </header>
 
-  <div class="container" style="padding-top:1rem;">
+  <div class="container profile-container">
 
-    <div class="card" style="text-align:center;margin-bottom:1rem;">
+    <div class="card profile-summary-card">
       <div class="profile-avatar"><i class="fa-solid fa-user"></i></div>
-      <div style="font-size:1.2rem;font-weight:800" id="displayName">—</div>
-      <div style="font-size:0.85rem;color:var(--muted)" id="displayEmail">—</div>
+      <div class="profile-display-name" id="displayName">—</div>
+      <div class="profile-display-email" id="displayEmail">—</div>
     </div>
 
     <div class="card">
@@ -59,11 +45,20 @@
     </div>
 
     <div class="card">
-      <div style="font-size:0.8rem;color:var(--muted);margin-bottom:0.4rem;font-weight:600">Your Referral Link</div>
-      <div style="background:#F1F5F9;border-radius:8px;padding:0.7rem;font-size:0.8rem;word-break:break-all;color:var(--primary);font-weight:700;margin-bottom:0.7rem" id="referralLink"></div>
+      <div class="referral-title">Your Referral Link</div>
+      <div class="referral-link-box" id="referralLink"></div>
       <button class="btn btn-primary btn-block" onclick="copyReferral()">
         <i class="fa-regular fa-copy"></i> Copy Referral Link
       </button>
+    </div>
+
+    <div class="card app-download-card">
+      <div class="section-title profile-section-title">Mobile App</div>
+      <p class="app-download-text">Install Villa Cash on your phone for faster access from your home screen.</p>
+      <button class="btn btn-accent btn-block" id="installAppBtn" type="button" onclick="installApp()">
+        <i class="fa-solid fa-download"></i> Download App
+      </button>
+      <p id="installHint" class="install-hint"></p>
     </div>
 
   </div>
@@ -78,6 +73,7 @@
     <a href="profile.html" class="active"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="pwa.js"></script>
   <script>
     let user = null;
     try {
@@ -103,6 +99,74 @@
         .then(() => alert("Referral link copied!"))
         .catch(() => alert("Copy manually: " + link));
     }
+
+    const installBtn = document.getElementById("installAppBtn");
+    const installHint = document.getElementById("installHint");
+
+    function isIOS() {
+      return /iphone|ipad|ipod/i.test(window.navigator.userAgent);
+    }
+
+    function isStandaloneMode() {
+      return window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+    }
+
+    function setInstallHint(msg) {
+      installHint.textContent = msg;
+    }
+
+    function refreshInstallState() {
+      if (isStandaloneMode()) {
+        installBtn.disabled = true;
+        installBtn.innerHTML = '<i class="fa-solid fa-circle-check"></i> App Installed';
+        setInstallHint("Villa Cash is already installed on this device.");
+        return;
+      }
+
+      if (window.__villaDeferredPrompt) {
+        installBtn.disabled = false;
+        installBtn.innerHTML = '<i class="fa-solid fa-download"></i> Download App';
+        setInstallHint("Tap Download App to install.");
+        return;
+      }
+
+      if (isIOS()) {
+        setInstallHint("On iPhone: tap Share, then Add to Home Screen.");
+      } else {
+        setInstallHint("Install option will appear once your browser allows it.");
+      }
+    }
+
+    async function installApp() {
+      if (isStandaloneMode()) {
+        setInstallHint("Villa Cash is already installed.");
+        return;
+      }
+
+      const promptEvent = window.__villaDeferredPrompt;
+      if (promptEvent) {
+        promptEvent.prompt();
+        const result = await promptEvent.userChoice;
+        if (result && result.outcome === "accepted") {
+          setInstallHint("Install request accepted. Finishing setup...");
+        } else {
+          setInstallHint("Install cancelled. You can try again anytime.");
+        }
+        window.__villaDeferredPrompt = null;
+        refreshInstallState();
+        return;
+      }
+
+      if (isIOS()) {
+        setInstallHint("On iPhone: tap Share, then Add to Home Screen.");
+      } else {
+        setInstallHint("Install prompt not available yet. Keep browsing and try again.");
+      }
+    }
+
+    window.addEventListener("villa-install-available", refreshInstallState);
+    window.addEventListener("villa-app-installed", refreshInstallState);
+    window.addEventListener("DOMContentLoaded", refreshInstallState);
   </script>
 </body>
 </html>
