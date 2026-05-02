@@ -19,7 +19,7 @@ router.get("/:refCode", async (req, res) => {
     const results = [];
 
     for (const user of referredUsers) {
-      const deposits = await Deposit.find({ userId: user._id });
+      const deposits = await Deposit.find({ user: user._id });
       const investments = await Investment.find({ userId: user._id });
 
       const recharge = deposits.reduce((sum, d) => sum + d.amount, 0);

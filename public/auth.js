@@ -42,21 +42,21 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const data = await res.json();
         if (data?.success && (data?.user?._id || data?.user?.id)) {
-  const userData = {
-    id: data.user._id || data.user.id,
-    fullName: data.user.fullName,
-    email: data.user.email,
-    phone: data.user.phone,
-    wallet: data.user.wallet || 0,
-    refCode: data.user.refCode || "",
-  };
+          const userData = {
+            id: data.user._id || data.user.id,
+            fullName: data.user.fullName,
+            email: data.user.email,
+            phone: data.user.phone,
+            wallet: data.user.wallet || 0,
+            refCode: data.user.refCode || "",
+          };
 
-  const storage = rememberMe ? localStorage : sessionStorage;
-  storage.setItem("user", JSON.stringify(userData));
+          // Signup persists across browser restarts by default.
+          localStorage.setItem("user", JSON.stringify(userData));
 
-  showMessage(message, "✅ Login successful! Redirecting...", "green");
-  setTimeout(() => location.href = "index.html", 1500);
-} else {
+          showMessage(message, "✅ Signup successful! Redirecting...", "green");
+          setTimeout(() => location.href = "index.html", 1500);
+        } else {
           showMessage(message, `⚠️ ${data.message || "Signup failed."}`, "orange");
         }
       } catch (err) {
@@ -88,9 +88,9 @@ document.addEventListener("DOMContentLoaded", () => {
 });
 
         const data = await res.json();
-        if (data?.success && data?.user?.id) {
+        if (data?.success && (data?.user?._id || data?.user?.id)) {
           const userData = {
-            id: data.user.id,
+            id: data.user._id || data.user.id,
             fullName: data.user.fullName,
             email: data.user.email,
             phone: data.user.phone,

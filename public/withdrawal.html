@@ -9,6 +9,7 @@
       --primary: #7F5AF0; /* purple */
       --secondary: #FBBF24; /* yellow */
       --accent: #FF69B4; /* pink */
+      --purple: #7F5AF0;
       --light-blue: #ADD8E6;
       --orange: #FFA500;
       --bg: #f9f9ff;
@@ -152,10 +153,10 @@
 
   <script>
     let user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
-if (!user || !(user.id || user.id)) {
+if (!user || !(user.id || user._id)) {
   window.location.href = "login.html";
 }
-const userId = user.id || user.id;
+const userId = user.id || user._id;
 
 // ✅ Auto-fill M-Pesa number
 document.addEventListener("DOMContentLoaded", () => {

@@ -139,16 +139,24 @@
   </div>
 
   <script>
-    const user = JSON.parse(localStorage.getItem("user")) || JSON.parse(sessionStorage.getItem("user"));
+    let user = null;
+    try {
+      const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
+      user = raw ? JSON.parse(raw) : null;
+      if (user && user._id && !user.id) user.id = user._id;
+    } catch (err) {
+      localStorage.removeItem("user");
+      sessionStorage.removeItem("user");
+    }
 
     if (!user || !user.id || !user.email) {
       window.location.href = "login.html";
     }
 
     document.getElementById("fullName").textContent = user.fullName || "-";
-	document.getElementById("userPhone").textContent = user.phone || "N/A";
-document.getElementById("referralCode").textContent = user.refCode || "N/A";
-document.getElementById("email").textContent = user.email || "-";
+    document.getElementById("userPhone").textContent = user.phone || "N/A";
+    document.getElementById("referralCode").textContent = user.refCode || "N/A";
+    document.getElementById("email").textContent = user.email || "-";
 
     const referralLinkText = `${window.location.origin}/signup.html?ref=${user.refCode || ""}`;
     document.getElementById("referralLink").textContent = referralLinkText;
@@ -159,55 +167,6 @@ document.getElementById("email").textContent = user.email || "-";
         .then(() => alert("✅ Referral link copied!"))
         .catch(() => alert("❌ Failed to copy link."));
     }
-
-    document.getElementById("profileForm").addEventListener("submit", async function (e) {
-      e.preventDefault();
-
-      const fullName = document.getElementById("fullName").value.trim();
-      const password = document.getElementById("password").value.trim();
-      const email = user.email;
-      const message = document.getElementById("updateMessage");
-
-      if (!fullName) {
-        message.textContent = "❗ Full name is required.";
-        message.style.color = "red";
-        return;
-      }
-
-      message.textContent = "⏳ Updating...";
-      message.style.color = "gray";
-
-      try {
-        const res = await fetch("/api/update-profile", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            id: user.id,
-            fullName,
-            email,
-            password: password || undefined
-          })
-        });
-
-        const data = await res.json();
-
-        if (data.success && data.user) {
-          message.textContent = "✅ Profile updated successfully!";
-          message.style.color = "green";
-
-          localStorage.setItem("user", JSON.stringify(data.user));
-          if (sessionStorage.getItem("user")) {
-            sessionStorage.setItem("user", JSON.stringify(data.user));
-          }
-        } else {
-          message.textContent = "⚠️ " + (data.message || "Update failed.");
-          message.style.color = "orange";
-        }
-      } catch (err) {
-        message.textContent = "🚫 Server error. Please try again.";
-        message.style.color = "red";
-      }
-    });
   </script>
 </body>
 </html>

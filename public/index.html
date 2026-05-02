@@ -271,8 +271,7 @@ if (hour < 12) {
         document.getElementById("expenses").textContent = parseFloat(u.expenses || 0).toFixed(2);
         document.getElementById("dailyIncome").textContent = parseFloat(u.dailyIncome || 0).toFixed(2);
 
-        // 💾 Update localStorage with new data
-        localStorage.setItem("user", JSON.stringify({
+        const normalizedUser = {
           id: u._id,
           fullName: u.fullName,
           email: u.email,
@@ -283,7 +282,12 @@ if (hour < 12) {
           expenses: u.expenses,
           dailyIncome: u.dailyIncome,
           role: u.role
-        }));
+        };
+
+        localStorage.setItem("user", JSON.stringify(normalizedUser));
+        if (sessionStorage.getItem("user")) {
+          sessionStorage.setItem("user", JSON.stringify(normalizedUser));
+        }
       }
     } catch (err) {
       console.error("❌ Failed to fetch updated user data:", err);

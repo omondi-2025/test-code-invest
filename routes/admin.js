@@ -5,9 +5,20 @@ const Deposit = require('../models/Deposit');
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
 
-// ✅ Test admin dashboard endpoint
-router.get('/dashboard', (req, res) => {
-  res.json({ message: '📊 Admin dashboard loaded' });
+// Dashboard payload consumed by public/admin.html
+router.get('/dashboard', async (req, res) => {
+  try {
+    const [pendingDeposits, pendingWithdrawals, users] = await Promise.all([
+      Deposit.find({ status: 'pending' }).sort({ date: -1 }),
+      Withdrawal.find({ status: 'pending' }).sort({ date: -1 }),
+      User.find({}, 'fullName phone email'),
+    ]);
+
+    res.json({ success: true, pendingDeposits, pendingWithdrawals, users });
+  } catch (err) {
+    console.error('❌ Dashboard load error:', err);
+    res.status(500).json({ success: false, message: '🚫 Server error loading dashboard.' });
+  }
 });
 
 // ✅ Approve a deposit by ID
@@ -63,6 +74,28 @@ router.post('/approve-withdrawal/:id', async (req, res) => {
     res.json({ success: true, message: '✅ Withdrawal approved', user });
   } catch (err) {
     console.error('❌ Withdrawal approval error:', err);
+    res.status(500).json({ message: '🚫 Server error' });
+  }
+});
+
+// ✅ Reject a withdrawal by ID
+router.post('/reject-withdrawal/:id', async (req, res) => {
+  try {
+    const withdrawal = await Withdrawal.findById(req.params.id);
+    if (!withdrawal) {
+      return res.status(404).json({ message: '❌ Withdrawal not found' });
+    }
+
+    if (withdrawal.status !== 'pending') {
+      return res.status(400).json({ message: '⚠️ Only pending withdrawals can be rejected' });
+    }
+
+    withdrawal.status = 'rejected';
+    await withdrawal.save();
+
+    res.json({ success: true, message: '✅ Withdrawal rejected' });
+  } catch (err) {
+    console.error('❌ Withdrawal rejection error:', err);
     res.status(500).json({ message: '🚫 Server error' });
   }
 });
