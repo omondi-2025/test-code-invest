@@ -91,13 +91,13 @@
         <div style="font-size:0.85rem;color:var(--success);font-weight:700;margin-bottom:0.6rem">
           <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.25).toFixed(2)}
         </div>
-        <button class="btn btn-primary" style="width:100%;padding:0.55rem" onclick="invest(${p.id}, ${p.amount})">
+        <button class="btn btn-primary" style="width:100%;padding:0.55rem" onclick="invest(${p.id}, ${p.amount}, this)">
           <i class="fa-solid fa-chart-line"></i> Invest
         </button>
       </div>
     `).join("");
 
-    async function invest(planId, amount) {
+    async function invest(planId, amount, buttonEl) {
       if (parseFloat(user.wallet || 0) < amount) {
         alert("❌ Insufficient wallet balance. Please deposit first.");
         return;
@@ -105,7 +105,7 @@
       if (!confirm("Invest KES " + amount.toLocaleString() + " for 100 days at 25% daily profit?\n\nKES " + (amount * 0.25).toFixed(2) + " will be added to your wallet every 24 hours.")) return;
 
       // Disable button to prevent double-click
-      const btn = event.target.closest("button");
+      const btn = buttonEl || null;
       const originalHTML = btn ? btn.innerHTML : "";
       if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; }
 
@@ -151,6 +151,9 @@
         const activeDiv = document.getElementById("activeInvestments");
         activeDiv.innerHTML = active.length
           ? active.map(i => {
+              const amount = Number(i.amount || 0);
+              const daily = Number(i.daily || 0);
+              const earned = Number(i.earned || 0);
               const now = new Date();
               const endDate = new Date(i.endDate);
               const daysRemaining = Math.max(0, Math.ceil((endDate - now) / (1000 * 60 * 60 * 24)));
@@ -167,16 +170,16 @@
               return `<div class="investment-item">
                 <div class="inv-row">
                   <span class="inv-label"><i class="fa-solid fa-coins"></i> Invested</span>
-                  <span class="inv-value">KES ${i.amount.toLocaleString()}</span>
+                  <span class="inv-value">KES ${amount.toLocaleString()}</span>
                 </div>
                 <div class="inv-row">
                   <span class="inv-label"><i class="fa-solid fa-chart-line"></i> Daily Earning</span>
-                  <span class="inv-value" style="color:var(--success)">KES ${i.daily.toLocaleString()}</span>
+                  <span class="inv-value" style="color:var(--success)">KES ${daily.toLocaleString()}</span>
                 </div>
                 <hr class="inv-divider"/>
                 <div class="inv-row">
                   <span class="inv-label"><i class="fa-solid fa-sack-dollar"></i> Total Earned</span>
-                  <span class="inv-value" style="color:var(--primary)">KES ${parseFloat(i.earned).toFixed(2)}</span>
+                  <span class="inv-value" style="color:var(--primary)">KES ${earned.toFixed(2)}</span>
                 </div>
                 <div class="inv-row">
                   <span class="inv-label"><i class="fa-regular fa-calendar-check"></i> Next Earnings</span>

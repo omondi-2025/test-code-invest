@@ -9,8 +9,9 @@ const isDev = process.env.NODE_ENV !== "production";
 // 📥 POST /api/invest — Initiate a new investment
 router.post("/", async (req, res) => {
   const { userId, amount, planId } = req.body;
+  const normalizedAmount = Number(amount);
 
-  if (!userId || !amount || !planId) {
+  if (!userId || !normalizedAmount || !planId) {
     return res.status(400).json({ success: false, message: "❗ Missing required fields." });
   }
 
@@ -18,23 +19,24 @@ router.post("/", async (req, res) => {
     const user = await User.findById(userId);
     if (!user) return res.status(404).json({ success: false, message: "❌ User not found." });
 
-    if (user.wallet < amount) {
+    const wallet = Number(user.wallet || 0);
+    if (wallet < normalizedAmount) {
       return res.status(400).json({ success: false, message: "❌ Insufficient wallet balance." });
     }
 
     // Deduct from wallet and update investment stats
-user.wallet -= amount;
-user.expenses += amount;         // ✅ Track total amount spent on packages
-user.totalInvested += amount;    // ✅ Track total amount invested
-await user.save();
+    user.wallet = parseFloat((wallet - normalizedAmount).toFixed(2));
+    user.expenses = parseFloat((Number(user.expenses || 0) + normalizedAmount).toFixed(2));
+    user.totalInvested = parseFloat((Number(user.totalInvested || 0) + normalizedAmount).toFixed(2));
+    await user.save();
 
     // Calculate daily earning (now using 25% per day)
-    const dailyProfit = parseFloat((amount * 0.25).toFixed(2));
+    const dailyProfit = parseFloat((normalizedAmount * 0.25).toFixed(2));
     const durationDays = 100;
 
     const newInvestment = new Investment({
       userId: user._id,
-      amount,
+      amount: normalizedAmount,
       daily: dailyProfit,
       duration: `${durationDays} days`,
       startDate: new Date(),
@@ -49,15 +51,15 @@ await user.save();
     if (user.referredBy) {
       const referrer = await User.findOne({ refCode: user.referredBy });
       if (referrer) {
-        const bonus = parseFloat((amount * 0.20).toFixed(2));
+        const bonus = parseFloat((normalizedAmount * 0.20).toFixed(2));
 
-        referrer.wallet += bonus;
-        referrer.referralBonus += bonus;
+        referrer.wallet = parseFloat((Number(referrer.wallet || 0) + bonus).toFixed(2));
+        referrer.referralBonus = parseFloat((Number(referrer.referralBonus || 0) + bonus).toFixed(2));
 
         referrer.referrals = referrer.referrals || [];
         referrer.referrals.push({
           userId: user._id,
-          amount,
+          amount: normalizedAmount,
           bonus,
           date: new Date()
         });
@@ -126,10 +128,10 @@ async function processEarnings() {
       const user = await User.findById(inv.userId);
       if (!user) continue;
 
-      user.wallet      = parseFloat((user.wallet      + inv.daily).toFixed(2));
-      user.dailyIncome = parseFloat((user.dailyIncome + inv.daily).toFixed(2));
-      inv.earned       = parseFloat((inv.earned       + inv.daily).toFixed(2));
-      inv.lastEarned   = now;
+      user.wallet = parseFloat((Number(user.wallet || 0) + Number(inv.daily || 0)).toFixed(2));
+      user.dailyIncome = parseFloat((Number(user.dailyIncome || 0) + Number(inv.daily || 0)).toFixed(2));
+      inv.earned = parseFloat((Number(inv.earned || 0) + Number(inv.daily || 0)).toFixed(2));
+      inv.lastEarned = now;
 
       await inv.save();
       await user.save();
