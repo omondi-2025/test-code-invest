@@ -28,6 +28,11 @@ app.use("/api/user", userRoutes);
 app.use("/api/withdraw", withdrawalRoutes);
 app.use("/api/agent", agentRoutes); // ✅ This line
 
+// ✅ Health / keep-alive ping
+app.get("/api/ping", (req, res) => {
+  res.status(200).json({ ok: true, time: new Date().toISOString() });
+});
+
 // ✅ Safe fallback for frontend SPA (avoid path-to-regexp crash)
 app.use((req, res, next) => {
   const url = req.originalUrl;
@@ -52,6 +57,17 @@ mongoose.connect(process.env.MONGO_URI)
     console.log("✅ Connected to MongoDB");
     app.listen(PORT, () => {
       console.log(`🚀 Server running at http://localhost:${PORT}`);
+
+      // ── Keep Render free tier awake (self-ping every 14 minutes) ──────────
+      const SELF_URL = process.env.RENDER_EXTERNAL_URL || `http://localhost:${PORT}`;
+      setInterval(() => {
+        const http = SELF_URL.startsWith("https") ? require("https") : require("http");
+        http.get(`${SELF_URL}/api/ping`, (res) => {
+          console.log(`🏓 Self-ping OK — ${new Date().toISOString()}`);
+        }).on("error", (err) => {
+          console.warn("⚠️ Self-ping failed:", err.message);
+        });
+      }, 14 * 60 * 1000); // every 14 minutes
     });
   })
   .catch((err) => {

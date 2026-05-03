@@ -4,11 +4,5 @@
       "source": "/api/:path*",
       "destination": "https://test-code-invest.onrender.com/api/:path*"
     }
-  ],
-  "crons": [
-    {
-      "path": "/api/invest/cron/daily-earnings",
-      "schedule": "0 * * * *"
-    }
   ]
 }

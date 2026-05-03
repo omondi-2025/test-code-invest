@@ -99,18 +99,28 @@
 
     async function invest(planId, amount) {
       if (parseFloat(user.wallet || 0) < amount) {
-        alert("Insufficient wallet balance. Please deposit first.");
+        alert("❌ Insufficient wallet balance. Please deposit first.");
         return;
       }
-      if (!confirm("Invest KES " + amount + " for 100 days at 25% profit?")) return;
+      if (!confirm("Invest KES " + amount.toLocaleString() + " for 100 days at 25% daily profit?\n\nKES " + (amount * 0.25).toFixed(2) + " will be added to your wallet every 24 hours.")) return;
+
+      // Disable button to prevent double-click
+      const btn = event.target.closest("button");
+      const originalHTML = btn ? btn.innerHTML : "";
+      if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; }
+
       try {
-        const res  = await fetch("/api/invest", {
-          method: "POST", headers: { "Content-Type": "application/json" },
+        const res = await fetch("/api/invest", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ userId: user._id, amount, planId })
         });
-        const data = await res.json();
-        if (data.success && data.user) {
-          alert("Investment successful!");
+
+        let data;
+        try { data = await res.json(); } catch { data = {}; }
+
+        if (res.ok && data.success && data.user) {
+          alert("✅ Investment successful! KES " + (amount * 0.25).toFixed(2) + " will be credited every 24 hours.");
           user = data.user;
           if (user.id && !user._id) user._id = user.id;
           localStorage.setItem("user", JSON.stringify(user));
@@ -118,9 +128,14 @@
           walletEl.textContent = parseFloat(user.wallet || 0).toFixed(2);
           loadInvestments();
         } else {
-          alert(data.message || "Investment failed.");
+          alert("❌ " + (data.message || `Investment failed (${res.status}). Please try again.`));
         }
-      } catch { alert("Server error. Please try again."); }
+      } catch (err) {
+        alert("❌ Could not reach server. The server may be waking up — please wait 30 seconds and try again.");
+        console.error("Invest error:", err);
+      } finally {
+        if (btn) { btn.disabled = false; btn.innerHTML = originalHTML; }
+      }
     }
 
     async function loadInvestments() {
@@ -190,9 +205,10 @@
               <p><strong>Status:</strong> ${i.status} &bull; <strong>Ended:</strong> ${new Date(i.endDate).toLocaleDateString()}</p>
             </div>`).join("")
           : '<p style="color:var(--muted)">No history yet.</p>';
-      } catch {
-        document.getElementById("activeInvestments").textContent = "Failed to load investments.";
-        document.getElementById("investmentHistory").textContent = "Failed to load history.";
+      } catch (err) {
+        console.error("loadInvestments error:", err);
+        document.getElementById("activeInvestments").innerHTML = '<p style="color:var(--danger)">⚠️ Failed to load investments. Please refresh.</p>';
+        document.getElementById("investmentHistory").innerHTML = '<p style="color:var(--danger)">⚠️ Failed to load history. Please refresh.</p>';
       }
     }
 
