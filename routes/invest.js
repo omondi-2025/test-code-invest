@@ -104,45 +104,73 @@ router.get("/", async (req, res) => {
     res.status(500).json({ success: false, message: "🚫 Failed to fetch investments." });
   }
 });
-  // CRON
-cron.schedule("* * * * *", async () => {
- // console.log("⏰ Cron running:", new Date());
+// ─── Shared earnings processing logic ───────────────────────────────────────
+async function processEarnings() {
+  const investments = await Investment.find({ status: "Active" });
+  let credited = 0;
 
-  try {
-    const investments = await Investment.find({ status: "Active" });
+  for (const inv of investments) {
+    const now = new Date();
 
-    for (const inv of investments) {
-      const now = new Date();
-      if (new Date(inv.endDate) <= now) {
-        inv.status = "Completed";
-        await inv.save();
-        continue;
-      }
-
-      const last = inv.lastEarned ? new Date(inv.lastEarned) : new Date(inv.startDate);
-      const hoursPassed = (now.getTime() - last.getTime()) / (1000 * 60 * 60);
-
-      if (hoursPassed >= 24) {
-        const user = await User.findById(inv.userId);
-        if (!user) continue;
-
-        user.wallet = parseFloat((user.wallet + inv.daily).toFixed(2));
-        user.dailyIncome = parseFloat((user.dailyIncome + inv.daily).toFixed(2));
-        inv.earned = parseFloat((inv.earned + inv.daily).toFixed(2));
-        inv.lastEarned = now;
-
-        await inv.save(); // ✅ Save updated investment
-        await user.save(); // ✅ Save updated user
-
-       // console.log(`✅ ${user.email} credited KES ${inv.daily} at ${now}`);
-      } else {
-        console.log(`⏳ Skipped ${inv._id}, only ${hoursPassed.toFixed(2)} hours passed`);
-      }
+    // Mark expired investments as Completed
+    if (new Date(inv.endDate) <= now) {
+      inv.status = "Completed";
+      await inv.save();
+      continue;
     }
 
-    console.log("✅ Daily earning job done.");
+    const last = inv.lastEarned ? new Date(inv.lastEarned) : new Date(inv.startDate);
+    const hoursPassed = (now.getTime() - last.getTime()) / (1000 * 60 * 60);
+
+    if (hoursPassed >= 24) {
+      const user = await User.findById(inv.userId);
+      if (!user) continue;
+
+      user.wallet      = parseFloat((user.wallet      + inv.daily).toFixed(2));
+      user.dailyIncome = parseFloat((user.dailyIncome + inv.daily).toFixed(2));
+      inv.earned       = parseFloat((inv.earned       + inv.daily).toFixed(2));
+      inv.lastEarned   = now;
+
+      await inv.save();
+      await user.save();
+      credited++;
+      console.log(`✅ Credited KES ${inv.daily} to ${user.email}`);
+    }
+  }
+
+  console.log(`✅ Earnings run complete — ${credited} investment(s) credited.`);
+  return credited;
+}
+
+// ─── HTTP endpoint (called by Vercel Cron) ───────────────────────────────────
+// GET /api/invest/cron/daily-earnings
+// Protected by CRON_SECRET env var (sent as Authorization: Bearer <secret>)
+router.get("/cron/daily-earnings", async (req, res) => {
+  const cronSecret = process.env.CRON_SECRET;
+  if (cronSecret) {
+    const authHeader = req.headers["authorization"] || "";
+    const token = authHeader.startsWith("Bearer ") ? authHeader.slice(7) : authHeader;
+    if (token !== cronSecret) {
+      return res.status(401).json({ success: false, message: "Unauthorized" });
+    }
+  }
+
+  try {
+    const credited = await processEarnings();
+    return res.status(200).json({ success: true, credited });
   } catch (err) {
-   // console.error("❌ Cron job error:", err.message);
+    console.error("❌ Cron endpoint error:", err.message);
+    return res.status(500).json({ success: false, message: err.message });
   }
 });
+
+// ─── In-process cron (backup — runs when server is awake on Render) ──────────
+cron.schedule("* * * * *", async () => {
+  try {
+    await processEarnings();
+  } catch (err) {
+    console.error("❌ In-process cron error:", err.message);
+  }
+});
+
 module.exports = router;
