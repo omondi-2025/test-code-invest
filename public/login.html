@@ -51,6 +51,11 @@
   </div>
 
   <script>
+    // Restore saved email + remember-me preference
+    document.addEventListener("DOMContentLoaded", function() {
+      VillaAuth.applyLoginPrefs();
+    });
+
     const form     = document.getElementById("loginForm");
     const msgEl    = document.getElementById("loginMessage");
     const loginBtn = document.getElementById("loginBtn");

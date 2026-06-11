@@ -2,24 +2,37 @@
    Include with <script src="api.js"></script> BEFORE any page script
    that talks to the API. */
 (function () {
-  const STORAGE_KEYS = ["user"];
+  const AUTH_KEY = "vc_auth";       // "local" | "session"
+  const REMEMBER_KEY = "vc_remember"; // "1" when user chose remember me
+  const EMAIL_KEY = "vc_email";     // last remembered email (login form only)
 
-  function readRaw() {
-    return localStorage.getItem("user") || sessionStorage.getItem("user") || null;
-  }
+  function activeStorage() {
+    if (localStorage.getItem(AUTH_KEY) === "local") return localStorage;
+    if (sessionStorage.getItem(AUTH_KEY) === "session") return sessionStorage;
 
-  function usingSession() {
-    return !localStorage.getItem("user") && !!sessionStorage.getItem("user");
+    // Legacy sessions created before vc_auth marker
+    if (localStorage.getItem("token") && localStorage.getItem("user")) {
+      localStorage.setItem(AUTH_KEY, "local");
+      return localStorage;
+    }
+    if (sessionStorage.getItem("token") && sessionStorage.getItem("user")) {
+      sessionStorage.setItem(AUTH_KEY, "session");
+      return sessionStorage;
+    }
+    return null;
   }
 
   const VillaAuth = {
     getToken() {
-      return localStorage.getItem("token") || sessionStorage.getItem("token") || null;
+      const store = activeStorage();
+      return store ? store.getItem("token") : null;
     },
 
     getUser() {
       try {
-        const raw = readRaw();
+        const store = activeStorage();
+        if (!store) return null;
+        const raw = store.getItem("user");
         if (!raw) return null;
         const u = JSON.parse(raw);
         if (u && u._id && !u.id) u.id = u._id;
@@ -35,25 +48,58 @@
       return !!(u && u.id && VillaAuth.getToken());
     },
 
-    // persist=true → localStorage (remember me); false → sessionStorage
+    isPersistent() {
+      return localStorage.getItem(AUTH_KEY) === "local";
+    },
+
+    // persist=true → localStorage (survives browser restart)
+    // persist=false → sessionStorage (cleared when tab/window closes)
     save(token, user, persist) {
       VillaAuth.clear();
       const store = persist ? localStorage : sessionStorage;
+      store.setItem(AUTH_KEY, persist ? "local" : "session");
       store.setItem("token", token);
       store.setItem("user", JSON.stringify(user));
+
+      // Login-form prefs live in localStorage regardless of session type
+      if (persist && user && user.email) {
+        localStorage.setItem(REMEMBER_KEY, "1");
+        localStorage.setItem(EMAIL_KEY, user.email);
+      } else {
+        localStorage.removeItem(REMEMBER_KEY);
+        localStorage.removeItem(EMAIL_KEY);
+      }
     },
 
-    // Update the stored user object while keeping it in the same storage
+    // Restore saved email + remember-me checkbox on the login page
+    getLoginPrefs() {
+      return {
+        remember: localStorage.getItem(REMEMBER_KEY) === "1",
+        email: localStorage.getItem(EMAIL_KEY) || "",
+      };
+    },
+
+    applyLoginPrefs() {
+      const prefs = VillaAuth.getLoginPrefs();
+      const emailEl = document.getElementById("email");
+      const rememberEl = document.getElementById("rememberMe");
+      if (emailEl && prefs.email) emailEl.value = prefs.email;
+      if (rememberEl) rememberEl.checked = prefs.remember;
+    },
+
+    // Update cached user in whichever storage holds the active session
     updateUser(user) {
-      const store = usingSession() ? sessionStorage : localStorage;
-      store.setItem("user", JSON.stringify(user));
+      const store = activeStorage();
+      if (store) store.setItem("user", JSON.stringify(user));
     },
 
     clear() {
-      [localStorage, sessionStorage].forEach((s) => {
+      [localStorage, sessionStorage].forEach(function (s) {
         s.removeItem("token");
         s.removeItem("user");
+        s.removeItem(AUTH_KEY);
       });
+      // Keep vc_remember + vc_email — they're login-form prefs, not session data
     },
 
     logout() {
@@ -69,9 +115,6 @@
       return true;
     },
 
-    // Call from a <head> script on protected pages. Runs before the body
-    // is parsed, so protected content is never painted for logged-out
-    // visitors — the page is hidden instantly and replaced with login.
     guard() {
       if (!VillaAuth.isLoggedIn()) {
         document.documentElement.style.display = "none";
@@ -81,7 +124,6 @@
       return true;
     },
 
-    // Inverse guard for login/signup pages: bounce logged-in users home.
     guardGuestOnly() {
       if (VillaAuth.isLoggedIn()) {
         document.documentElement.style.display = "none";
@@ -91,8 +133,7 @@
       return true;
     },
 
-    // fetch wrapper that injects the bearer token and handles expiry
-    async fetch(url, options = {}) {
+    async fetch(url, options) {
       const opts = { ...options };
       opts.headers = { ...(options.headers || {}) };
       const token = VillaAuth.getToken();
@@ -107,7 +148,6 @@
       return res;
     },
 
-    // convenience JSON POST
     async postJSON(url, body) {
       const res = await VillaAuth.fetch(url, {
         method: "POST",
@@ -117,7 +157,6 @@
       return res.json();
     },
 
-    // Format a date as e.g. "11 Jun 2026, 4:48 AM" for history sections
     fmtDate(value) {
       if (!value) return "—";
       const d = new Date(value);
@@ -132,7 +171,6 @@
       });
     },
 
-    // HTML-escape helper to prevent XSS when injecting user data
     esc(value) {
       return String(value == null ? "" : value)
         .replace(/&/g, "&amp;")
