@@ -69,6 +69,28 @@
       return true;
     },
 
+    // Call from a <head> script on protected pages. Runs before the body
+    // is parsed, so protected content is never painted for logged-out
+    // visitors — the page is hidden instantly and replaced with login.
+    guard() {
+      if (!VillaAuth.isLoggedIn()) {
+        document.documentElement.style.display = "none";
+        window.location.replace("login.html");
+        return false;
+      }
+      return true;
+    },
+
+    // Inverse guard for login/signup pages: bounce logged-in users home.
+    guardGuestOnly() {
+      if (VillaAuth.isLoggedIn()) {
+        document.documentElement.style.display = "none";
+        window.location.replace("index.html");
+        return false;
+      }
+      return true;
+    },
+
     // fetch wrapper that injects the bearer token and handles expiry
     async fetch(url, options = {}) {
       const opts = { ...options };

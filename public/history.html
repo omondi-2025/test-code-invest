@@ -6,6 +6,8 @@
   <title>Villa Cash | History</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
+  <script src="api.js"></script>
+  <script>VillaAuth.guard();</script>
 </head>
 <body>
 
@@ -45,10 +47,7 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
-  <script src="api.js"></script>
   <script>
-    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
-
     async function loadHistory() {
       const tbody = document.getElementById("historyBody");
       try {

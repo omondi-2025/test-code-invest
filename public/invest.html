@@ -6,6 +6,8 @@
   <title>Villa Cash | Invest</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
+  <script src="api.js"></script>
+  <script>VillaAuth.guard();</script>
   <style>
     .investment-item {
       background: #F8FAFC;
@@ -63,9 +65,7 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
-  <script src="api.js"></script>
   <script>
-    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
     let user = VillaAuth.getUser();
 
     const walletEl = document.getElementById("walletBalance");

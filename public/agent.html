@@ -6,6 +6,8 @@
   <title>Villa Cash | Invite</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
+  <script src="api.js"></script>
+  <script>VillaAuth.guard();</script>
   <style>
     .commission-badge {
       background: linear-gradient(135deg, var(--primary), #2d5282);
@@ -88,10 +90,8 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
-  <script src="api.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
-      if (!VillaAuth.requireLogin()) return;
       const user = VillaAuth.getUser();
       if (!user.refCode) { window.location.href = "login.html"; return; }
 
