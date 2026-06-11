@@ -2,7 +2,7 @@
    Include with <script src="api.js"></script> BEFORE any page script
    that talks to the API. */
 (function () {
-  const APP_VERSION = "7";
+  const APP_VERSION = "8";
   const AUTH_KEY = "vc_auth";
   const REMEMBER_KEY = "vc_remember";
   const EMAIL_KEY = "vc_email";
@@ -184,6 +184,42 @@
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body || {}),
       });
+      return res.json();
+    },
+
+    getCachedWallet() {
+      const u = VillaAuth.getUser();
+      return u ? Number(u.wallet || 0) : 0;
+    },
+
+    paintDashboard(u) {
+      if (!u) return;
+      const hour = new Date().getHours();
+      const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+      const wallet = parseFloat(u.wallet || 0).toFixed(2);
+
+      const set = function (id, text) {
+        const el = document.getElementById(id);
+        if (el) el.textContent = text;
+      };
+
+      set("greetingText", greeting + ",");
+      set("userName", u.fullName || "Investor");
+      set("userWallet", wallet);
+      set("balanceStat", wallet);
+      set("cashouts", parseFloat(u.cashouts || 0).toFixed(2));
+      set("expenses", parseFloat(u.expenses || 0).toFixed(2));
+      set("dailyIncome", parseFloat(u.dailyIncome || 0).toFixed(2));
+    },
+
+    paintWalletBalance(elId) {
+      const el = document.getElementById(elId);
+      if (!el) return;
+      el.textContent = VillaAuth.getCachedWallet().toFixed(2);
+    },
+
+    async getJSON(url) {
+      const res = await VillaAuth.fetch(url);
       return res.json();
     },
 

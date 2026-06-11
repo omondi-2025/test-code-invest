@@ -1,4 +1,4 @@
-const CACHE_NAME = "villa-cash-v7";
+const CACHE_NAME = "villa-cash-v8";
 // Only cache static assets — never HTML/JS (those must always be fresh)
 const OFFLINE_ASSETS = [
   "/styles.css",

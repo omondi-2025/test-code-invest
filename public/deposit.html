@@ -6,7 +6,7 @@
   <title>Villa Cash | Deposit</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
-  <script src="api.js"></script>
+  <script src="api.js?v=8"></script>
   <script>VillaAuth.guard();</script>
 </head>
 <body>
@@ -95,12 +95,15 @@
 
   <script>
     async function fetchWallet() {
+      VillaAuth.paintWalletBalance("walletBalance");
       try {
-        const res  = await VillaAuth.fetch("/api/deposit/balance");
-        const data = await res.json();
-        document.getElementById("walletBalance").textContent =
-          (data.success && typeof data.wallet === "number") ? data.wallet.toFixed(2) : "0.00";
-      } catch { document.getElementById("walletBalance").textContent = "0.00"; }
+        const data = await VillaAuth.getJSON("/api/deposit/balance");
+        if (data.success && typeof data.wallet === "number") {
+          document.getElementById("walletBalance").textContent = data.wallet.toFixed(2);
+          const u = VillaAuth.getUser();
+          if (u) { u.wallet = data.wallet; VillaAuth.updateUser(u); }
+        }
+      } catch { /* keep cached value */ }
     }
     fetchWallet();
 

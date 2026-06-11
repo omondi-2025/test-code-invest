@@ -15,7 +15,7 @@
   });
 
   window.addEventListener("load", function () {
-    navigator.serviceWorker.register("/sw.js").catch(function (err) {
+    navigator.serviceWorker.register("/sw.js?v=8").catch(function (err) {
       console.error("Service worker registration failed", err);
     });
   });

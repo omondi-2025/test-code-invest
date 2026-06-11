@@ -6,7 +6,7 @@
   <title>Villa Cash | Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
-  <script src="api.js"></script>
+  <script src="api.js?v=8"></script>
   <script>VillaAuth.guard();</script>
   <style>
     .hero-card {
@@ -134,30 +134,21 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="pwa.js?v=8"></script>
   <script>
   document.addEventListener("DOMContentLoaded", async () => {
     if (!VillaAuth.requireLogin()) return;
 
+    const cached = VillaAuth.getUser();
+    if (cached) VillaAuth.paintDashboard(cached);
+
     try {
-      const res  = await VillaAuth.fetch("/api/user/me");
-      const data = await res.json();
+      const data = await VillaAuth.getJSON("/api/user/me");
       if (data.success && data.user) {
         const u = data.user;
-
-        const hour = new Date().getHours();
-        const greeting = hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
-
-        document.getElementById("greetingText").textContent = greeting + ",";
-        document.getElementById("userName").textContent     = u.fullName;
-        document.getElementById("userWallet").textContent   = parseFloat(u.wallet || 0).toFixed(2);
-        document.getElementById("balanceStat").textContent  = parseFloat(u.wallet || 0).toFixed(2);
-        document.getElementById("cashouts").textContent     = parseFloat(u.cashouts || 0).toFixed(2);
-        document.getElementById("expenses").textContent     = parseFloat(u.expenses || 0).toFixed(2);
-        document.getElementById("dailyIncome").textContent  = parseFloat(u.dailyIncome || 0).toFixed(2);
-
-        // Keep the cached user fresh, in the same storage the user chose
+        VillaAuth.paintDashboard(u);
         VillaAuth.updateUser({
-          id: u._id, fullName: u.fullName, email: u.email, phone: u.phone,
+          id: u._id || u.id, fullName: u.fullName, email: u.email, phone: u.phone,
           wallet: u.wallet, refCode: u.refCode, cashouts: u.cashouts,
           expenses: u.expenses, dailyIncome: u.dailyIncome, role: u.role
         });
