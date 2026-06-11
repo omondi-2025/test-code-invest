@@ -74,15 +74,10 @@
   </nav>
 
   <script src="pwa.js"></script>
+  <script src="api.js"></script>
   <script>
-    let user = null;
-    try {
-      const raw = localStorage.getItem("user") || sessionStorage.getItem("user");
-      user = raw ? JSON.parse(raw) : null;
-      if (user && user._id && !user.id) user.id = user._id;
-    } catch { localStorage.removeItem("user"); sessionStorage.removeItem("user"); }
-
-    if (!user || !user.id || !user.email) { window.location.href = "login.html"; }
+    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
+    const user = VillaAuth.getUser();
 
     document.getElementById("displayName").textContent = user.fullName || "—";
     document.getElementById("displayEmail").textContent = user.email || "—";

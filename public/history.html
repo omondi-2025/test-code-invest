@@ -45,18 +45,16 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
-    if (!user || !(user.id || user._id)) { window.location.href = "login.html"; }
-    const userId = user.id || user._id;
+    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
 
     async function loadHistory() {
       const tbody = document.getElementById("historyBody");
       try {
         const [wRes, dRes] = await Promise.all([
-          fetch("/api/withdraw?userId=" + userId),
-          fetch("/api/deposit?userId=" + userId)
+          VillaAuth.fetch("/api/withdraw"),
+          VillaAuth.fetch("/api/deposit")
         ]);
         const [wData, dData] = await Promise.all([wRes.json(), dRes.json()]);
 

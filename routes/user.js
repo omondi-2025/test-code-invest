@@ -1,7 +1,18 @@
 const express = require('express');
 const router = express.Router();
 const bcrypt = require('bcryptjs');
+const rateLimit = require('express-rate-limit');
 const User = require('../models/User');
+const { signUserToken, requireAuth } = require('../middleware/auth');
+
+// Brute-force protection on auth endpoints
+const authLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 20,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { success: false, message: 'Too many attempts. Please try again in 15 minutes.' },
+});
 
 function cleanUserPayload(user) {
   return {
@@ -31,7 +42,7 @@ async function generateUniqueRefCode() {
 }
 
 // 🔐 SIGNUP
-router.post('/signup', async (req, res) => {
+router.post('/signup', authLimiter, async (req, res) => {
   try {
     const { fullName, email, phone, password, ref } = req.body;
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -47,9 +58,20 @@ router.post('/signup', async (req, res) => {
       return res.status(400).json({ success: false, message: '❗ Password must be at least 6 characters.' });
     }
 
+    if (!/^(07|01)\d{8}$/.test(normalizedPhone)) {
+      return res.status(400).json({ success: false, message: '❗ Phone must start with 07 or 01 and be 10 digits.' });
+    }
+
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(409).json({ success: false, message: '⚠️ Email already registered.' });
+    }
+
+    // Only store a referrer that actually exists
+    let referredBy = null;
+    if (ref) {
+      const referrer = await User.findOne({ refCode: String(ref).trim() });
+      if (referrer) referredBy = referrer.refCode;
     }
 
     const hashedPassword = await bcrypt.hash(normalizedPassword, 10);
@@ -62,7 +84,7 @@ router.post('/signup', async (req, res) => {
       password: hashedPassword,
       wallet: 0,
       refCode,
-      referredBy: ref || null,
+      referredBy,
       role: 'user'
     });
 
@@ -70,6 +92,7 @@ router.post('/signup', async (req, res) => {
     res.status(201).json({
       success: true,
       message: '✅ Registration successful.',
+      token: signUserToken(newUser),
       user: cleanUserPayload(newUser),
     });
   } catch (err) {
@@ -79,7 +102,7 @@ router.post('/signup', async (req, res) => {
 });
 
 // 🔐 LOGIN
-router.post('/login', async (req, res) => {
+router.post('/login', authLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const normalizedEmail = String(email || '').trim().toLowerCase();
@@ -88,15 +111,17 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ success: false, message: '❗ Email and password are required.' });
     }
 
+    // Generic error for both cases — prevents user enumeration
     const user = await User.findOne({ email: normalizedEmail });
-    if (!user) return res.status(404).json({ success: false, message: '❌ User not found.' });
-
-    const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(401).json({ success: false, message: '❌ Incorrect password.' });
+    const isMatch = user ? await bcrypt.compare(password, user.password) : false;
+    if (!user || !isMatch) {
+      return res.status(401).json({ success: false, message: '❌ Invalid email or password.' });
+    }
 
     res.json({
       success: true,
       message: '✅ Login successful.',
+      token: signUserToken(user),
       user: cleanUserPayload(user),
     });
   } catch (err) {
@@ -105,10 +130,10 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// 🏦 WALLET BALANCE
-router.get('/:id/wallet', async (req, res) => {
+// 🏦 WALLET BALANCE (own account only)
+router.get('/me/wallet', requireAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id);
+    const user = await User.findById(req.userId);
     if (!user) return res.status(404).json({ success: false, message: 'User not found' });
 
     res.json({ success: true, wallet: user.wallet });
@@ -118,10 +143,10 @@ router.get('/:id/wallet', async (req, res) => {
   }
 });
 
-// 👤 FETCH USER BY ID
-router.get('/:id', async (req, res) => {
+// 👤 FETCH OWN PROFILE
+router.get('/me', requireAuth, async (req, res) => {
   try {
-    const user = await User.findById(req.params.id).select('-password');
+    const user = await User.findById(req.userId).select('-password');
     if (!user) return res.status(404).json({ success: false, message: '❌ User not found.' });
 
     res.json({ success: true, user });

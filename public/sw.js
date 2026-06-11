@@ -1,4 +1,4 @@
-const CACHE_NAME = "villa-cash-v1";
+const CACHE_NAME = "villa-cash-v2";
 const OFFLINE_ASSETS = [
   "/",
   "/index.html",
@@ -12,7 +12,8 @@ const OFFLINE_ASSETS = [
   "/agent.html",
   "/package.html",
   "/styles.css",
-  "/auth.js",
+  "/api.js",
+  "/pwa.js",
   "/manifest.webmanifest",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",
@@ -38,17 +39,24 @@ self.addEventListener("activate", (event) => {
 self.addEventListener("fetch", (event) => {
   if (event.request.method !== "GET") return;
 
+  const url = new URL(event.request.url);
+
+  // Never intercept API calls — live data must always come from the network.
+  if (url.pathname.startsWith("/api/")) return;
+
+  // Network-first for pages and assets so updates show up immediately;
+  // fall back to cache when offline.
   event.respondWith(
-    caches.match(event.request).then((cached) => {
-      if (cached) return cached;
-      return fetch(event.request)
-        .then((response) => {
-          if (!response || response.status !== 200) return response;
+    fetch(event.request)
+      .then((response) => {
+        if (response && response.status === 200 && url.origin === location.origin) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
-          return response;
-        })
-        .catch(() => caches.match("/index.html"));
-    })
+        }
+        return response;
+      })
+      .catch(() =>
+        caches.match(event.request).then((cached) => cached || caches.match("/index.html"))
+      )
   );
 });

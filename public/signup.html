@@ -53,13 +53,9 @@
     </div>
   </div>
 
+  <script src="api.js"></script>
   <script>
-    try {
-      const u = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
-      if (u && u.id) window.location.href = "index.html";
-    } catch(e) {
-      localStorage.removeItem("user"); sessionStorage.removeItem("user");
-    }
+    if (VillaAuth.isLoggedIn()) window.location.href = "index.html";
 
     const form      = document.getElementById("signupForm");
     const msgEl     = document.getElementById("signupMessage");
@@ -101,9 +97,9 @@
         });
         const data = await res.json();
 
-        if (data.success && data.user) {
+        if (data.success && data.user && data.token) {
           setMsg("Account created! Redirecting…", "#10B981");
-          localStorage.setItem("user", JSON.stringify(data.user));
+          VillaAuth.save(data.token, data.user, true);
           setTimeout(() => { window.location.href = "index.html"; }, 900);
         } else {
           setMsg(data.message || "Signup failed.", "#EF4444");

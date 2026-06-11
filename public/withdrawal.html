@@ -30,7 +30,7 @@
       <ul style="margin:0.4rem 0 0 1.1rem;padding:0;font-size:0.875rem;line-height:1.7">
         <li>Minimum withdrawal is <strong>KES 200</strong></li>
         <li>An <strong>18% tax</strong> is deducted from all withdrawals</li>
-        <li>Processing time: <strong>9:00 AM – 5:00 PM</strong> daily</li>
+        <li>Requests accepted <strong>9:00 AM – 5:00 PM</strong> daily (one per day)</li>
       </ul>
     </div>
 
@@ -81,21 +81,21 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
-    if (!user || !(user.id || user._id)) { window.location.href = "login.html"; }
-    const userId = user.id || user._id;
+    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
+    const user = VillaAuth.getUser();
 
     document.getElementById("mpesaNumber").value = user.phone || "";
 
-    fetch("/api/deposit/balance/" + userId)
+    VillaAuth.fetch("/api/deposit/balance")
       .then(r => r.json())
       .then(d => {
         document.getElementById("walletDisplay").textContent = "KES " + (d.wallet || 0).toFixed(2);
-      });
+      })
+      .catch(() => {});
 
-    fetch("/api/withdraw?userId=" + userId)
+    VillaAuth.fetch("/api/withdraw")
       .then(r => r.json())
       .then(d => {
         const tbody = document.getElementById("historyBody");
@@ -138,11 +138,7 @@
       btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...';
       msgEl.textContent = "";
       try {
-        const res    = await fetch("/api/withdraw", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, amount, phone: formattedPhone })
-        });
-        const result = await res.json();
+        const result = await VillaAuth.postJSON("/api/withdraw", { amount, phone: formattedPhone });
         if (result.success) {
           msgEl.textContent = "Withdrawal request submitted!";
           msgEl.style.color = "var(--success)";

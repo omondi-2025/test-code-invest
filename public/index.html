@@ -132,22 +132,13 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
   document.addEventListener("DOMContentLoaded", async () => {
-    let user = null;
-    try {
-      user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
-      if (user && user._id && !user.id) user.id = user._id;
-    } catch (err) {
-      localStorage.removeItem("user"); sessionStorage.removeItem("user");
-    }
-
-    if (!user || !user.id || !user.email) {
-      window.location.href = "login.html"; return;
-    }
+    if (!VillaAuth.requireLogin()) return;
 
     try {
-      const res  = await fetch(`/api/user/${user.id}`);
+      const res  = await VillaAuth.fetch("/api/user/me");
       const data = await res.json();
       if (data.success && data.user) {
         const u = data.user;
@@ -163,20 +154,18 @@
         document.getElementById("expenses").textContent     = parseFloat(u.expenses || 0).toFixed(2);
         document.getElementById("dailyIncome").textContent  = parseFloat(u.dailyIncome || 0).toFixed(2);
 
-        const normalizedUser = {
+        // Keep the cached user fresh, in the same storage the user chose
+        VillaAuth.updateUser({
           id: u._id, fullName: u.fullName, email: u.email, phone: u.phone,
           wallet: u.wallet, refCode: u.refCode, cashouts: u.cashouts,
           expenses: u.expenses, dailyIncome: u.dailyIncome, role: u.role
-        };
-        localStorage.setItem("user", JSON.stringify(normalizedUser));
-        if (sessionStorage.getItem("user")) sessionStorage.setItem("user", JSON.stringify(normalizedUser));
+        });
       }
     } catch (err) { console.error("Failed to fetch user data:", err); }
   });
 
   function logout() {
-    localStorage.removeItem("user"); sessionStorage.removeItem("user");
-    location.href = "login.html";
+    VillaAuth.logout();
   }
 
   function toggleWAMenu() {

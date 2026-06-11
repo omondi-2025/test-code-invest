@@ -63,14 +63,25 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
-    if (!user || !(user.id || user._id)) { window.location.href = "login.html"; }
-    if (user && user.id && !user._id) user._id = user.id;
+    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
+    let user = VillaAuth.getUser();
 
     const walletEl = document.getElementById("walletBalance");
     walletEl.textContent = parseFloat(user.wallet || 0).toFixed(2);
+
+    // Refresh balance from the server (storage can be stale)
+    VillaAuth.fetch("/api/deposit/balance")
+      .then(r => r.json())
+      .then(d => {
+        if (d.success && typeof d.wallet === "number") {
+          walletEl.textContent = d.wallet.toFixed(2);
+          user.wallet = d.wallet;
+          VillaAuth.updateUser(user);
+        }
+      })
+      .catch(() => {});
 
     const plans = [
       { id: 1, amount: 400 },
@@ -87,9 +98,9 @@
     document.getElementById("plansContainer").innerHTML = plans.map(p => `
       <div class="plan-card" id="plan${p.id}">
         <div style="font-size:1.1rem;font-weight:800;color:var(--primary)">KES ${p.amount.toLocaleString()}</div>
-        <div style="font-size:0.8rem;color:var(--muted);margin:0.3rem 0">25% daily return &bull; 100 days</div>
+        <div style="font-size:0.8rem;color:var(--muted);margin:0.3rem 0">10% daily return &bull; 100 days</div>
         <div style="font-size:0.85rem;color:var(--success);font-weight:700;margin-bottom:0.6rem">
-          <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.25).toFixed(2)}
+          <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.10).toFixed(2)}
         </div>
         <button class="btn btn-primary" style="width:100%;padding:0.55rem" onclick="invest(${p.id}, ${p.amount}, this)">
           <i class="fa-solid fa-chart-line"></i> Invest
@@ -102,7 +113,7 @@
         alert("❌ Insufficient wallet balance. Please deposit first.");
         return;
       }
-      if (!confirm("Invest KES " + amount.toLocaleString() + " for 100 days at 25% daily profit?\n\nKES " + (amount * 0.25).toFixed(2) + " will be added to your wallet every 24 hours.")) return;
+      if (!confirm("Invest KES " + amount.toLocaleString() + " for 100 days at 10% daily profit?\n\nKES " + (amount * 0.10).toFixed(2) + " will be added to your wallet every 24 hours.")) return;
 
       // Disable button to prevent double-click
       const btn = buttonEl || null;
@@ -110,21 +121,19 @@
       if (btn) { btn.disabled = true; btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Processing...'; }
 
       try {
-        const res = await fetch("/api/invest", {
+        const res = await VillaAuth.fetch("/api/invest", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId: user._id, amount, planId })
+          body: JSON.stringify({ planId })
         });
 
         let data;
         try { data = await res.json(); } catch { data = {}; }
 
         if (res.ok && data.success && data.user) {
-          alert("✅ Investment successful! KES " + (amount * 0.25).toFixed(2) + " will be credited every 24 hours.");
+          alert("✅ Investment successful! KES " + (amount * 0.10).toFixed(2) + " will be credited every 24 hours.");
           user = data.user;
-          if (user.id && !user._id) user._id = user.id;
-          localStorage.setItem("user", JSON.stringify(user));
-          sessionStorage.setItem("user", JSON.stringify(user));
+          VillaAuth.updateUser(user);
           walletEl.textContent = parseFloat(user.wallet || 0).toFixed(2);
           loadInvestments();
         } else {
@@ -140,7 +149,7 @@
 
     async function loadInvestments() {
       try {
-        const res  = await fetch("/api/invest?userId=" + user._id);
+        const res  = await VillaAuth.fetch("/api/invest");
         const data = await res.json();
         if (!data.success) throw new Error();
         const investments = data.investments || [];

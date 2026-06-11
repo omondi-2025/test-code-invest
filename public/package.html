@@ -30,21 +30,21 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
     (function() {
-      const user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
-      if (!user) { window.location.href = "login.html"; return; }
+      if (!VillaAuth.requireLogin()) return;
 
       const packages = [
-        { id: 1, amount: 400,   profit: "25%", duration: "100 days" },
-        { id: 2, amount: 800,   profit: "25%", duration: "100 days" },
-        { id: 3, amount: 1800,  profit: "25%", duration: "100 days" },
-        { id: 4, amount: 2800,  profit: "25%", duration: "100 days" },
-        { id: 5, amount: 3500,  profit: "25%", duration: "100 days" },
-        { id: 6, amount: 5000,  profit: "25%", duration: "100 days" },
-        { id: 7, amount: 8500,  profit: "25%", duration: "100 days" },
-        { id: 8, amount: 15000, profit: "25%", duration: "100 days" },
-        { id: 9, amount: 30000, profit: "25%", duration: "100 days" },
+        { id: 1, amount: 400,   profit: "10%", duration: "100 days" },
+        { id: 2, amount: 800,   profit: "10%", duration: "100 days" },
+        { id: 3, amount: 1800,  profit: "10%", duration: "100 days" },
+        { id: 4, amount: 2800,  profit: "10%", duration: "100 days" },
+        { id: 5, amount: 3500,  profit: "10%", duration: "100 days" },
+        { id: 6, amount: 5000,  profit: "10%", duration: "100 days" },
+        { id: 7, amount: 8500,  profit: "10%", duration: "100 days" },
+        { id: 8, amount: 15000, profit: "10%", duration: "100 days" },
+        { id: 9, amount: 30000, profit: "10%", duration: "100 days" },
       ];
 
       document.getElementById("packagesList").innerHTML = packages.map(p => `
@@ -52,7 +52,7 @@
           <div style="font-size:1.1rem;font-weight:800;color:var(--primary)">KES ${p.amount.toLocaleString()}</div>
           <div style="font-size:0.8rem;color:var(--muted);margin:0.3rem 0">${p.profit} profit &bull; ${p.duration}</div>
           <div style="font-size:0.85rem;color:var(--success);font-weight:700;margin-bottom:0.6rem">
-            <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.0025).toFixed(2)}
+            <i class="fa-solid fa-coins"></i> Daily: KES ${(p.amount * 0.10).toFixed(2)}
           </div>
           <button class="btn btn-primary" style="width:100%;padding:0.55rem"
             onclick="window.location.href='invest.html#plan${p.id}'">

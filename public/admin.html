@@ -107,6 +107,11 @@
 
 <script>
   // helpers
+  function esc(v) {
+    return String(v == null ? '' : v)
+      .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
   function getToken() { return sessionStorage.getItem('adminToken') || ''; }
   function authHeaders() {
     return { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + getToken() };
@@ -216,12 +221,16 @@
     var html = '';
     rows.forEach(function(d) {
       var dateStr = new Date(d.date || d.createdAt).toLocaleDateString();
+      var who = d.user && d.user.fullName
+        ? esc(d.user.fullName) + '<br><small style="opacity:.7">' + esc(d.user.phone || '') + '</small>'
+        : esc(d.user && d.user._id ? d.user._id : (d.user || '-'));
       var approveBtn = d.status === 'pending'
-        ? '<button class="btn btn-success" style="padding:.35rem .75rem;font-size:.78rem" onclick="approveDeposit(\'' + d._id + '\')"><i class="fa-solid fa-check"></i> Approve</button>'
+        ? '<button class="btn btn-success" style="padding:.35rem .75rem;font-size:.78rem" onclick="approveDeposit(\'' + esc(d._id) + '\')"><i class="fa-solid fa-check"></i> Approve</button>'
         : '';
-      html += '<tr><td>' + dateStr + '</td><td>' + (d.user || '-') + '</td>' +
-              '<td class="amount">KES ' + (d.amount || 0).toLocaleString() + '</td>' +
-              '<td><span class="badge badge-' + d.status + '">' + d.status + '</span></td>' +
+      html += '<tr><td>' + dateStr + '</td><td>' + who + '</td>' +
+              '<td class="amount">KES ' + (d.amount || 0).toLocaleString() +
+              (d.message ? '<br><small style="opacity:.65;font-weight:400;white-space:normal">' + esc(d.message) + '</small>' : '') + '</td>' +
+              '<td><span class="badge badge-' + esc(d.status) + '">' + esc(d.status) + '</span></td>' +
               '<td><div class="action-btns">' + approveBtn + '</div></td></tr>';
     });
     tbody.innerHTML = html;
@@ -237,15 +246,18 @@
     var html = '';
     rows.forEach(function(w) {
       var dateStr = new Date(w.date || w.createdAt).toLocaleDateString();
+      var who = w.user && w.user.fullName
+        ? esc(w.user.fullName)
+        : esc(w.user && w.user._id ? w.user._id : (w.user || '-'));
       var btns = '';
       if (w.status === 'pending') {
-        btns = '<button class="btn btn-success" style="padding:.35rem .75rem;font-size:.78rem" onclick="approveWithdrawal(\'' + w._id + '\')"><i class="fa-solid fa-check"></i> Approve</button>' +
-               '<button class="btn btn-danger" style="padding:.35rem .75rem;font-size:.78rem;margin-left:.4rem" onclick="rejectWithdrawal(\'' + w._id + '\')"><i class="fa-solid fa-xmark"></i> Reject</button>';
+        btns = '<button class="btn btn-success" style="padding:.35rem .75rem;font-size:.78rem" onclick="approveWithdrawal(\'' + esc(w._id) + '\')"><i class="fa-solid fa-check"></i> Approve</button>' +
+               '<button class="btn btn-danger" style="padding:.35rem .75rem;font-size:.78rem;margin-left:.4rem" onclick="rejectWithdrawal(\'' + esc(w._id) + '\')"><i class="fa-solid fa-xmark"></i> Reject</button>';
       }
-      html += '<tr><td>' + dateStr + '</td><td>' + (w.user || '-') + '</td>' +
-              '<td>' + (w.phone || '-') + '</td>' +
+      html += '<tr><td>' + dateStr + '</td><td>' + who + '</td>' +
+              '<td>' + esc(w.mpesaNumber || '-') + '</td>' +
               '<td class="amount">KES ' + (w.amount || 0).toLocaleString() + '</td>' +
-              '<td><span class="badge badge-' + w.status + '">' + w.status + '</span></td>' +
+              '<td><span class="badge badge-' + esc(w.status) + '">' + esc(w.status) + '</span></td>' +
               '<td><div class="action-btns">' + btns + '</div></td></tr>';
     });
     tbody.innerHTML = html;
@@ -260,9 +272,9 @@
     }
     var html = '';
     rows.forEach(function(u) {
-      html += '<tr><td>' + (u.fullName || '-') + '</td>' +
-              '<td>' + (u.email || '-') + '</td>' +
-              '<td>' + (u.phone || '-') + '</td>' +
+      html += '<tr><td>' + esc(u.fullName || '-') + '</td>' +
+              '<td>' + esc(u.email || '-') + '</td>' +
+              '<td>' + esc(u.phone || '-') + '</td>' +
               '<td class="amount">KES ' + (u.wallet || 0).toLocaleString() + '</td></tr>';
     });
     tbody.innerHTML = html;

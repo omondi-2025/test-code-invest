@@ -88,17 +88,18 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
     document.addEventListener("DOMContentLoaded", async () => {
-      let user = null;
-      try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
-      if (!user || !user.refCode) { window.location.href = "login.html"; return; }
+      if (!VillaAuth.requireLogin()) return;
+      const user = VillaAuth.getUser();
+      if (!user.refCode) { window.location.href = "login.html"; return; }
 
-      const referralURL = window.location.origin + "/signup.html?ref=" + user.refCode;
+      const referralURL = window.location.origin + "/signup.html?ref=" + encodeURIComponent(user.refCode);
       document.getElementById("referralLink").textContent = referralURL;
 
       try {
-        const res  = await fetch("/api/agent/" + user.refCode);
+        const res  = await VillaAuth.fetch("/api/agent");
         const data = await res.json();
         const tbody = document.getElementById("referralBody");
 
@@ -111,7 +112,7 @@
         tbody.innerHTML = data.referrals.map(r => {
           total += r.commission || 0;
           return '<tr style="border-bottom:1px solid var(--border)">' +
-            '<td style="padding:0.65rem 0.6rem">' + (r.fullName || "-") + '</td>' +
+            '<td style="padding:0.65rem 0.6rem">' + VillaAuth.esc(r.fullName || "-") + '</td>' +
             '<td style="padding:0.65rem 0.6rem">KES ' + (r.investment || 0).toFixed(2) + '</td>' +
             '<td style="padding:0.65rem 0.6rem;color:var(--success);font-weight:700">KES ' + (r.commission || 0).toFixed(2) + '</td>' +
           '</tr>';

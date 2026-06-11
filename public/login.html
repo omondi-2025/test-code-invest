@@ -49,13 +49,9 @@
     </div>
   </div>
 
+  <script src="api.js"></script>
   <script>
-    try {
-      const u = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null");
-      if (u && u.id && u.email) window.location.href = "index.html";
-    } catch(e) {
-      localStorage.removeItem("user"); sessionStorage.removeItem("user");
-    }
+    if (VillaAuth.isLoggedIn()) window.location.href = "index.html";
 
     const form     = document.getElementById("loginForm");
     const msgEl    = document.getElementById("loginMessage");
@@ -82,10 +78,9 @@
         });
         const data = await res.json();
 
-        if (data.success && data.user) {
+        if (data.success && data.user && data.token) {
           setMsg("Login successful! Redirecting…", "#10B981");
-          const storage = rememberMe ? localStorage : sessionStorage;
-          storage.setItem("user", JSON.stringify(data.user));
+          VillaAuth.save(data.token, data.user, rememberMe);
           setTimeout(() => { window.location.href = "index.html"; }, 700);
         } else {
           setMsg(data.message || "Invalid email or password.", "#EF4444");

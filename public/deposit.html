@@ -75,19 +75,17 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
+  <script src="api.js"></script>
   <script>
-    let user = null;
-    try { user = JSON.parse(localStorage.getItem("user") || sessionStorage.getItem("user") || "null"); } catch(e) {}
-    if (!user || !(user.id || user._id)) { window.location.href = "login.html"; }
-    const userId = user.id || user._id;
+    if (!VillaAuth.requireLogin()) throw new Error("redirecting");
 
     async function fetchWallet() {
       try {
-        const res  = await fetch("/api/deposit/balance/" + userId);
+        const res  = await VillaAuth.fetch("/api/deposit/balance");
         const data = await res.json();
         document.getElementById("walletBalance").textContent =
           (data.success && typeof data.wallet === "number") ? data.wallet.toFixed(2) : "0.00";
-      } catch { document.getElementById("walletBalance").textContent = "Error"; }
+      } catch { document.getElementById("walletBalance").textContent = "0.00"; }
     }
     fetchWallet();
 
@@ -110,11 +108,7 @@
       statusEl.textContent = "Submitting for admin approval...";
       statusEl.style.color = "var(--muted)";
       try {
-        const res  = await fetch("/api/deposit", {
-          method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ userId, amount, message })
-        });
-        const data = await res.json();
+        const data = await VillaAuth.postJSON("/api/deposit", { amount, message });
         if (data.success) {
           statusEl.textContent = "Submitted! Please wait up to 5 minutes for review.";
           statusEl.style.color = "var(--success)";
