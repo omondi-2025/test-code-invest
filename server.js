@@ -14,13 +14,7 @@ app.set("trust proxy", 1);
 // Middleware
 app.use(cors());
 app.use(express.json({ limit: "50kb" }));
-app.use(express.static(path.join(__dirname, "public"), {
-  setHeaders(res, filePath) {
-    if (/\.(html|js)$/i.test(filePath)) {
-      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
-    }
-  },
-}));
+app.use(express.static(path.join(__dirname, "public")));
 
 // Routes
 const adminRoutes = require("./routes/admin");

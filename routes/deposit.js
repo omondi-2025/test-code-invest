@@ -130,19 +130,4 @@ router.get('/balance', requireAuth, async (req, res) => {
   }
 });
 
-// Legacy alias — older cached pages called GET /api/deposit/balance/:userId
-router.get('/balance/:userId', requireAuth, async (req, res) => {
-  if (String(req.params.userId) !== String(req.userId)) {
-    return res.status(403).json({ success: false, message: 'Forbidden' });
-  }
-  try {
-    const user = await User.findById(req.userId);
-    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
-    res.json({ success: true, wallet: user.wallet });
-  } catch (err) {
-    console.error('❌ Wallet fetch error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error' });
-  }
-});
-
 module.exports = router;

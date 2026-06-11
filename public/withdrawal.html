@@ -6,7 +6,7 @@
   <title>Villa Cash | Withdraw</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
-  <script src="api.js?v=9"></script>
+  <script src="api.js"></script>
   <script>VillaAuth.guard();</script>
 </head>
 <body>
@@ -85,12 +85,8 @@
 
   <script>
     const user = VillaAuth.getUser();
-    if (!user) { window.location.replace("login.html"); return; }
 
     document.getElementById("mpesaNumber").value = user.phone || "";
-
-    document.getElementById("walletDisplay").textContent =
-      "KES " + VillaAuth.getCachedWallet().toFixed(2);
 
     VillaAuth.fetch("/api/deposit/balance")
       .then(r => r.json())
@@ -116,10 +112,6 @@
             '<td style="padding:0.6rem;color:' + color + ';font-weight:700">' + w.status + '</td>' +
           '</tr>';
         }).join("");
-      })
-      .catch(() => {
-        document.getElementById("historyBody").innerHTML =
-          '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--danger)">Failed to load history.</td></tr>';
       });
 
     document.getElementById("withdrawAmount").addEventListener("input", function() {

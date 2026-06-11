@@ -8,7 +8,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
   <link rel="manifest" href="manifest.webmanifest"/>
-  <script src="api.js?v=9"></script>
+  <script src="api.js"></script>
   <script>VillaAuth.guard();</script>
 </head>
 <body>
@@ -105,9 +105,9 @@
     <a href="profile.html" class="active"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
-  <script src="pwa.js?v=9"></script>
+  <script src="pwa.js"></script>
   <script>
-    const user = VillaAuth.getUser() || {};
+    const user = VillaAuth.getUser();
 
     document.getElementById("displayName").textContent = user.fullName || "—";
     document.getElementById("displayEmail").textContent = user.email || "—";
