@@ -60,7 +60,7 @@
       <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
         <thead>
           <tr style="background:var(--primary);color:#fff;">
-            <th style="padding:0.75rem 0.6rem;text-align:left">Date</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Date &amp; Time</th>
             <th style="padding:0.75rem 0.6rem;text-align:left">Amount</th>
             <th style="padding:0.75rem 0.6rem;text-align:left">Status</th>
           </tr>
@@ -107,7 +107,7 @@
         tbody.innerHTML = list.map(w => {
           const color = w.status === "approved" ? "var(--success)" : w.status === "pending" ? "var(--secondary)" : "var(--danger)";
           return '<tr style="border-bottom:1px solid var(--border)">' +
-            '<td style="padding:0.6rem">' + new Date(w.date).toLocaleDateString() + '</td>' +
+            '<td style="padding:0.6rem">' + VillaAuth.fmtDate(w.date) + '</td>' +
             '<td style="padding:0.6rem">KES ' + w.amount + '</td>' +
             '<td style="padding:0.6rem;color:' + color + ';font-weight:700">' + w.status + '</td>' +
           '</tr>';

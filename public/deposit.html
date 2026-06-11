@@ -65,6 +65,22 @@
       </button>
     </div>
 
+    <p class="section-title">Deposit History</p>
+    <div class="card" style="padding:0;overflow:hidden;">
+      <table style="width:100%;border-collapse:collapse;font-size:0.85rem;">
+        <thead>
+          <tr style="background:var(--primary);color:#fff;">
+            <th style="padding:0.75rem 0.6rem;text-align:left">Date &amp; Time</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Amount</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Status</th>
+          </tr>
+        </thead>
+        <tbody id="depositHistoryBody">
+          <tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--muted)">Loading...</td></tr>
+        </tbody>
+      </table>
+    </div>
+
   </div>
 
   <nav class="bottom-nav">
@@ -87,6 +103,32 @@
       } catch { document.getElementById("walletBalance").textContent = "0.00"; }
     }
     fetchWallet();
+
+    async function loadDepositHistory() {
+      const tbody = document.getElementById("depositHistoryBody");
+      try {
+        const res  = await VillaAuth.fetch("/api/deposit");
+        const data = await res.json();
+        const list = (data.success && data.deposits) ? data.deposits : [];
+
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--muted)">No deposits yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(d => {
+          const color = d.status === "approved" ? "var(--success)" : d.status === "pending" ? "var(--secondary)" : "var(--danger)";
+          return '<tr style="border-bottom:1px solid var(--border)">' +
+            '<td style="padding:0.6rem">' + VillaAuth.fmtDate(d.date) + '</td>' +
+            '<td style="padding:0.6rem">KES ' + Number(d.amount || 0).toFixed(2) + '</td>' +
+            '<td style="padding:0.6rem;color:' + color + ';font-weight:700">' + VillaAuth.esc(d.status || "pending") + '</td>' +
+          '</tr>';
+        }).join("");
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--danger)">Failed to load history.</td></tr>';
+      }
+    }
+    loadDepositHistory();
 
     async function submitTransaction() {
       const message  = document.getElementById("mpesaMessage").value.trim();
@@ -114,6 +156,7 @@
           document.getElementById("mpesaMessage").value = "";
           document.getElementById("manualAmount").value = "";
           fetchWallet();
+          loadDepositHistory();
         } else {
           statusEl.textContent = data.message || "Submission failed.";
           statusEl.style.color = "var(--danger)";

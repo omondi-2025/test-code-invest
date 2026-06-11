@@ -26,7 +26,7 @@
             <th style="padding:0.75rem 0.6rem;text-align:left">Type</th>
             <th style="padding:0.75rem 0.6rem;text-align:left">Amount</th>
             <th style="padding:0.75rem 0.6rem;text-align:left">Status</th>
-            <th style="padding:0.75rem 0.6rem;text-align:left">Date</th>
+            <th style="padding:0.75rem 0.6rem;text-align:left">Date &amp; Time</th>
           </tr>
         </thead>
         <tbody id="historyBody">
@@ -81,7 +81,7 @@
             '<td style="padding:0.65rem 0.6rem">' + icon + ' ' + e.type + '</td>' +
             '<td style="padding:0.65rem 0.6rem">KES ' + (e.amount || 0).toFixed(2) + '</td>' +
             '<td style="padding:0.65rem 0.6rem;color:' + color + ';font-weight:700">' + e.status + '</td>' +
-            '<td style="padding:0.65rem 0.6rem">' + (e.date ? new Date(e.date).toLocaleDateString() : "—") + '</td>' +
+            '<td style="padding:0.65rem 0.6rem">' + VillaAuth.fmtDate(e.date) + '</td>' +
           '</tr>';
         }).join("");
       } catch {

@@ -54,6 +54,36 @@
       </button>
     </div>
 
+    <div class="card">
+      <div class="referral-title"><i class="fa-solid fa-gift" style="color:var(--success)"></i> Redeem Gift Code</div>
+      <p style="font-size:0.85rem;color:var(--muted);margin:0.3rem 0 0.7rem">
+        Have a gift code from Villa Cash? Enter it below to add the gift to your wallet.
+      </p>
+      <input type="text" id="giftCodeInput" placeholder="e.g. GIFT-AB23CD45"
+        style="width:100%;box-sizing:border-box;text-transform:uppercase;letter-spacing:1px"
+        autocomplete="off"/>
+      <div id="giftMessage" style="margin:0.6rem 0;font-weight:600;font-size:0.9rem"></div>
+      <button class="btn btn-success btn-block" id="redeemBtn" onclick="redeemGift()">
+        <i class="fa-solid fa-gift"></i> Redeem Gift
+      </button>
+
+      <div style="margin-top:1rem">
+        <div style="font-size:0.8rem;color:var(--muted);font-weight:600;margin-bottom:0.4rem">Redeem History</div>
+        <table style="width:100%;border-collapse:collapse;font-size:0.82rem;">
+          <thead>
+            <tr style="background:var(--primary);color:#fff;">
+              <th style="padding:0.55rem 0.5rem;text-align:left">Date &amp; Time</th>
+              <th style="padding:0.55rem 0.5rem;text-align:left">Code</th>
+              <th style="padding:0.55rem 0.5rem;text-align:left">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="giftHistoryBody">
+            <tr><td colspan="3" style="text-align:center;padding:0.8rem;color:var(--muted)">Loading...</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
     <div class="card app-download-card">
       <div class="section-title profile-section-title">Mobile App</div>
       <p class="app-download-text">Install Villa Cash on your phone for faster access from your home screen.</p>
@@ -94,6 +124,71 @@
         .then(() => alert("Referral link copied!"))
         .catch(() => alert("Copy manually: " + link));
     }
+
+    // ── Gift code redemption ─────────────────────────────────────────────
+    async function redeemGift() {
+      const input = document.getElementById("giftCodeInput");
+      const msgEl = document.getElementById("giftMessage");
+      const btn   = document.getElementById("redeemBtn");
+      const code  = input.value.trim().toUpperCase();
+
+      if (!code) {
+        msgEl.textContent = "Please enter a gift code.";
+        msgEl.style.color = "var(--danger)"; return;
+      }
+
+      btn.disabled = true;
+      btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Redeeming...';
+      msgEl.textContent = "";
+
+      try {
+        const data = await VillaAuth.postJSON("/api/gift/redeem", { code });
+        if (data.success) {
+          msgEl.textContent = data.message || "Gift redeemed!";
+          msgEl.style.color = "var(--success)";
+          input.value = "";
+          if (typeof data.wallet === "number") {
+            const u = VillaAuth.getUser();
+            if (u) { u.wallet = data.wallet; VillaAuth.updateUser(u); }
+          }
+          loadGiftHistory();
+        } else {
+          msgEl.textContent = data.message || "Could not redeem this code.";
+          msgEl.style.color = "var(--danger)";
+        }
+      } catch {
+        msgEl.textContent = "Server error. Please try again.";
+        msgEl.style.color = "var(--danger)";
+      } finally {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="fa-solid fa-gift"></i> Redeem Gift';
+      }
+    }
+
+    async function loadGiftHistory() {
+      const tbody = document.getElementById("giftHistoryBody");
+      try {
+        const res  = await VillaAuth.fetch("/api/gift/history");
+        const data = await res.json();
+        const list = (data.success && data.history) ? data.history : [];
+
+        if (!list.length) {
+          tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:0.8rem;color:var(--muted)">No gifts redeemed yet.</td></tr>';
+          return;
+        }
+
+        tbody.innerHTML = list.map(g =>
+          '<tr style="border-bottom:1px solid var(--border)">' +
+            '<td style="padding:0.55rem 0.5rem">' + VillaAuth.fmtDate(g.date) + '</td>' +
+            '<td style="padding:0.55rem 0.5rem;font-weight:700;color:var(--primary)">' + VillaAuth.esc(g.code) + '</td>' +
+            '<td style="padding:0.55rem 0.5rem;color:var(--success);font-weight:700">KES ' + Number(g.amount || 0).toFixed(2) + '</td>' +
+          '</tr>'
+        ).join("");
+      } catch {
+        tbody.innerHTML = '<tr><td colspan="3" style="text-align:center;padding:0.8rem;color:var(--danger)">Failed to load history.</td></tr>';
+      }
+    }
+    loadGiftHistory();
 
     const installBtn = document.getElementById("installAppBtn");
     const installHint = document.getElementById("installHint");

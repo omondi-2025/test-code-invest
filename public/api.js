@@ -117,6 +117,21 @@
       return res.json();
     },
 
+    // Format a date as e.g. "11 Jun 2026, 4:48 AM" for history sections
+    fmtDate(value) {
+      if (!value) return "—";
+      const d = new Date(value);
+      if (isNaN(d.getTime())) return "—";
+      return d.toLocaleString("en-KE", {
+        day: "2-digit",
+        month: "short",
+        year: "numeric",
+        hour: "numeric",
+        minute: "2-digit",
+        hour12: true,
+      });
+    },
+
     // HTML-escape helper to prevent XSS when injecting user data
     esc(value) {
       return String(value == null ? "" : value)

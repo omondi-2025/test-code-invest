@@ -5,6 +5,7 @@ const rateLimit = require('express-rate-limit');
 const Deposit = require('../models/Deposit');
 const Withdrawal = require('../models/Withdrawal');
 const User = require('../models/User');
+const GiftCode = require('../models/GiftCode');
 const { requireAdmin } = require('../middleware/auth');
 
 const adminLoginLimiter = rateLimit({
@@ -124,6 +125,80 @@ router.post('/reject-withdrawal/:id', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('❌ Withdrawal rejection error:', err);
     res.status(500).json({ success: false, message: '🚫 Server error' });
+  }
+});
+
+// ── Gift codes ───────────────────────────────────────────────────────────────
+
+function generateGiftCode() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // no confusing 0/O/1/I
+  let s = '';
+  for (let i = 0; i < 8; i++) s += chars[Math.floor(Math.random() * chars.length)];
+  return 'GIFT-' + s;
+}
+
+// 🎁 POST /api/admin/gift-codes — create a gift code
+// Body: { amount, validHours, maxUses? }
+router.post('/gift-codes', requireAdmin, async (req, res) => {
+  try {
+    const amount = Number(req.body.amount);
+    const validHours = Number(req.body.validHours);
+    const maxUses = Math.max(0, parseInt(req.body.maxUses, 10) || 0);
+
+    if (!amount || amount < 1) {
+      return res.status(400).json({ success: false, message: '❗ Enter a valid gift amount.' });
+    }
+    if (!validHours || validHours < 1) {
+      return res.status(400).json({ success: false, message: '❗ Enter a valid duration (hours).' });
+    }
+
+    // Retry on the (unlikely) chance of a duplicate code
+    let gift = null;
+    for (let attempt = 0; attempt < 5 && !gift; attempt++) {
+      try {
+        gift = await GiftCode.create({
+          code: generateGiftCode(),
+          amount,
+          maxUses,
+          expiresAt: new Date(Date.now() + validHours * 60 * 60 * 1000),
+        });
+      } catch (e) {
+        if (e.code !== 11000) throw e;
+      }
+    }
+    if (!gift) {
+      return res.status(500).json({ success: false, message: '🚫 Could not generate a unique code. Try again.' });
+    }
+
+    res.status(201).json({ success: true, message: '✅ Gift code created.', gift });
+  } catch (err) {
+    console.error('❌ Gift code creation error:', err);
+    res.status(500).json({ success: false, message: '🚫 Server error creating gift code.' });
+  }
+});
+
+// 📋 GET /api/admin/gift-codes — list all gift codes with usage info
+router.get('/gift-codes', requireAdmin, async (req, res) => {
+  try {
+    const codes = await GiftCode.find().sort({ createdAt: -1 }).limit(100);
+    const now = Date.now();
+
+    const list = codes.map((g) => ({
+      _id: g._id,
+      code: g.code,
+      amount: g.amount,
+      maxUses: g.maxUses,
+      uses: (g.redemptions || []).length,
+      createdAt: g.createdAt,
+      expiresAt: g.expiresAt,
+      expired: new Date(g.expiresAt).getTime() <= now,
+      fullyUsed: g.maxUses > 0 && (g.redemptions || []).length >= g.maxUses,
+    }));
+
+    res.json({ success: true, codes: list });
+  } catch (err) {
+    console.error('❌ Gift code list error:', err);
+    res.status(500).json({ success: false, message: '🚫 Server error loading gift codes.' });
   }
 });
 

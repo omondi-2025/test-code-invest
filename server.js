@@ -23,6 +23,7 @@ const investRoutes = require("./routes/invest");
 const userRoutes = require("./routes/user");
 const withdrawalRoutes = require("./routes/withdrawal");
 const agentRoutes = require("./routes/agent");
+const giftRoutes = require("./routes/gift");
 
 app.use("/api/admin", adminRoutes);
 app.use("/api/deposit", depositRoutes);
@@ -30,6 +31,7 @@ app.use("/api/invest", investRoutes);
 app.use("/api/user", userRoutes);
 app.use("/api/withdraw", withdrawalRoutes);
 app.use("/api/agent", agentRoutes);
+app.use("/api/gift", giftRoutes);
 
 // ✅ Health / keep-alive ping
 app.get("/api/ping", (req, res) => {

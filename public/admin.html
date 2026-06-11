@@ -89,6 +89,47 @@
     </section>
 
     <section class="admin-section">
+      <h2><i class="fa-solid fa-gift"></i> Gift Codes</h2>
+      <div style="background:#fff;border-radius:12px;padding:1rem;margin-bottom:1rem;display:flex;gap:0.8rem;flex-wrap:wrap;align-items:flex-end">
+        <div style="flex:1;min-width:130px">
+          <label style="display:block;font-size:0.78rem;font-weight:600;margin-bottom:0.3rem">Amount (KES)</label>
+          <input type="number" id="giftAmount" placeholder="e.g. 100" min="1"
+            style="width:100%;box-sizing:border-box;padding:0.55rem;border:1.5px solid #e2e8f0;border-radius:8px"/>
+        </div>
+        <div style="flex:1;min-width:130px">
+          <label style="display:block;font-size:0.78rem;font-weight:600;margin-bottom:0.3rem">Valid For</label>
+          <div style="display:flex;gap:0.4rem">
+            <input type="number" id="giftDuration" placeholder="e.g. 24" min="1"
+              style="flex:1;min-width:60px;box-sizing:border-box;padding:0.55rem;border:1.5px solid #e2e8f0;border-radius:8px"/>
+            <select id="giftDurationUnit" style="padding:0.55rem;border:1.5px solid #e2e8f0;border-radius:8px">
+              <option value="1">Hours</option>
+              <option value="24">Days</option>
+            </select>
+          </div>
+        </div>
+        <div style="flex:1;min-width:130px">
+          <label style="display:block;font-size:0.78rem;font-weight:600;margin-bottom:0.3rem">Max Uses (0 = unlimited)</label>
+          <input type="number" id="giftMaxUses" placeholder="0" min="0" value="0"
+            style="width:100%;box-sizing:border-box;padding:0.55rem;border:1.5px solid #e2e8f0;border-radius:8px"/>
+        </div>
+        <button class="btn btn-success" style="padding:0.6rem 1.2rem" onclick="createGiftCode()" id="createGiftBtn">
+          <i class="fa-solid fa-plus"></i> Create Code
+        </button>
+      </div>
+      <p id="giftCreateMsg" style="font-weight:600;font-size:0.88rem;margin:0 0 0.8rem"></p>
+      <div class="admin-table-wrap">
+        <table class="admin-table">
+          <thead>
+            <tr><th>Code</th><th>Amount</th><th>Uses</th><th>Created</th><th>Expires</th><th>Status</th><th></th></tr>
+          </thead>
+          <tbody id="giftCodesBody">
+            <tr class="empty-row"><td colspan="7">Loading&#8230;</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <section class="admin-section">
       <h2><i class="fa-solid fa-users"></i> Registered Users</h2>
       <div class="admin-table-wrap">
         <table class="admin-table">
@@ -111,6 +152,15 @@
     return String(v == null ? '' : v)
       .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;')
       .replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+  }
+  function fmtDate(v) {
+    if (!v) return '—';
+    var d = new Date(v);
+    if (isNaN(d.getTime())) return '—';
+    return d.toLocaleString('en-KE', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: 'numeric', minute: '2-digit', hour12: true
+    });
   }
   function getToken() { return sessionStorage.getItem('adminToken') || ''; }
   function authHeaders() {
@@ -206,9 +256,97 @@
       renderDeposits(data.pendingDeposits || []);
       renderWithdrawals(data.pendingWithdrawals || []);
       renderUsers(data.users || []);
+      loadGiftCodes();
     } catch (e) {
       console.error('Dashboard load failed', e);
     }
+  }
+
+  // ── Gift codes ──────────────────────────────────────────────────────
+  async function loadGiftCodes() {
+    var tbody = document.getElementById('giftCodesBody');
+    try {
+      var res = await fetch('/api/admin/gift-codes', { headers: authHeaders() });
+      if (res.status === 401) { adminLogout(); return; }
+      var data = await res.json();
+      var rows = data.codes || [];
+
+      if (!rows.length) {
+        tbody.innerHTML = '<tr class="empty-row"><td colspan="7">No gift codes created yet</td></tr>';
+        return;
+      }
+
+      var html = '';
+      rows.forEach(function(g) {
+        var status, badge;
+        if (g.expired) { status = 'expired'; badge = 'rejected'; }
+        else if (g.fullyUsed) { status = 'fully used'; badge = 'pending'; }
+        else { status = 'active'; badge = 'approved'; }
+
+        html += '<tr>' +
+          '<td style="font-weight:700;letter-spacing:1px">' + esc(g.code) + '</td>' +
+          '<td class="amount">KES ' + (g.amount || 0).toLocaleString() + '</td>' +
+          '<td>' + g.uses + (g.maxUses > 0 ? ' / ' + g.maxUses : ' / ∞') + '</td>' +
+          '<td>' + fmtDate(g.createdAt) + '</td>' +
+          '<td>' + fmtDate(g.expiresAt) + '</td>' +
+          '<td><span class="badge badge-' + badge + '">' + status + '</span></td>' +
+          '<td><button class="btn btn-primary" style="padding:.3rem .7rem;font-size:.75rem" onclick="copyGiftCode(\'' + esc(g.code) + '\')"><i class="fa-regular fa-copy"></i> Copy</button></td>' +
+        '</tr>';
+      });
+      tbody.innerHTML = html;
+    } catch (e) {
+      tbody.innerHTML = '<tr class="empty-row"><td colspan="7">Failed to load gift codes</td></tr>';
+    }
+  }
+
+  async function createGiftCode() {
+    var amount = Number(document.getElementById('giftAmount').value);
+    var duration = Number(document.getElementById('giftDuration').value);
+    var unit = Number(document.getElementById('giftDurationUnit').value);
+    var maxUses = Number(document.getElementById('giftMaxUses').value) || 0;
+    var msgEl = document.getElementById('giftCreateMsg');
+    var btn = document.getElementById('createGiftBtn');
+
+    msgEl.textContent = '';
+    if (!amount || amount < 1) { msgEl.textContent = 'Enter a valid amount.'; msgEl.style.color = '#dc2626'; return; }
+    if (!duration || duration < 1) { msgEl.textContent = 'Enter a valid duration.'; msgEl.style.color = '#dc2626'; return; }
+
+    btn.disabled = true;
+    btn.innerHTML = '<i class="fa-solid fa-spinner fa-spin"></i> Creating…';
+
+    try {
+      var res = await fetch('/api/admin/gift-codes', {
+        method: 'POST',
+        headers: authHeaders(),
+        body: JSON.stringify({ amount: amount, validHours: duration * unit, maxUses: maxUses })
+      });
+      var data = await res.json();
+
+      if (res.ok && data.success && data.gift) {
+        msgEl.innerHTML = '✅ Code created: <strong style="letter-spacing:1px">' + esc(data.gift.code) +
+          '</strong> (KES ' + data.gift.amount + ', expires ' + fmtDate(data.gift.expiresAt) + ') — copy and send it to your users.';
+        msgEl.style.color = '#16a34a';
+        document.getElementById('giftAmount').value = '';
+        document.getElementById('giftDuration').value = '';
+        document.getElementById('giftMaxUses').value = '0';
+        loadGiftCodes();
+      } else {
+        msgEl.textContent = data.message || 'Failed to create gift code.';
+        msgEl.style.color = '#dc2626';
+      }
+    } catch (e) {
+      msgEl.textContent = 'Network error. Please try again.';
+      msgEl.style.color = '#dc2626';
+    } finally {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="fa-solid fa-plus"></i> Create Code';
+    }
+  }
+
+  function copyGiftCode(code) {
+    navigator.clipboard.writeText(code)
+      .then(function() { alert('Gift code copied: ' + code); })
+      .catch(function() { alert('Copy manually: ' + code); });
   }
 
   // render deposits
@@ -220,7 +358,7 @@
     }
     var html = '';
     rows.forEach(function(d) {
-      var dateStr = new Date(d.date || d.createdAt).toLocaleDateString();
+      var dateStr = fmtDate(d.date || d.createdAt);
       var who = d.user && d.user.fullName
         ? esc(d.user.fullName) + '<br><small style="opacity:.7">' + esc(d.user.phone || '') + '</small>'
         : esc(d.user && d.user._id ? d.user._id : (d.user || '-'));
@@ -245,7 +383,7 @@
     }
     var html = '';
     rows.forEach(function(w) {
-      var dateStr = new Date(w.date || w.createdAt).toLocaleDateString();
+      var dateStr = fmtDate(w.date || w.createdAt);
       var who = w.user && w.user.fullName
         ? esc(w.user.fullName)
         : esc(w.user && w.user._id ? w.user._id : (w.user || '-'));

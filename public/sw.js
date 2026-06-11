@@ -1,4 +1,4 @@
-const CACHE_NAME = "villa-cash-v3";
+const CACHE_NAME = "villa-cash-v4";
 const OFFLINE_ASSETS = [
   "/",
   "/index.html",

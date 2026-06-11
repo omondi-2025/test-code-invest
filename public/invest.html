@@ -200,7 +200,7 @@
                 </div>
                 <div class="inv-row">
                   <span class="inv-label"><i class="fa-regular fa-clock"></i> Start Date</span>
-                  <span class="inv-value">${new Date(i.startDate).toLocaleString('en-KE', { day:'2-digit', month:'short', year:'numeric', hour:'2-digit', minute:'2-digit' })}</span>
+                  <span class="inv-value">${VillaAuth.fmtDate(i.startDate)}</span>
                 </div>
                 <div class="inv-row" style="margin-top:0.35rem">
                   <span class="inv-label">Status</span>
@@ -214,7 +214,7 @@
         histDiv.innerHTML = history.length
           ? history.map(i => `<div class="investment-item completed">
               <p><strong>Amount:</strong> KES ${i.amount} &bull; <strong>Earned:</strong> KES ${i.earned}</p>
-              <p><strong>Status:</strong> ${i.status} &bull; <strong>Ended:</strong> ${new Date(i.endDate).toLocaleDateString()}</p>
+              <p><strong>Status:</strong> ${i.status} &bull; <strong>Ended:</strong> ${VillaAuth.fmtDate(i.endDate)}</p>
             </div>`).join("")
           : '<p style="color:var(--muted)">No history yet.</p>';
       } catch (err) {
