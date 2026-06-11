@@ -85,6 +85,7 @@
 
   <script>
     const user = VillaAuth.getUser();
+    if (!user) { window.location.replace("login.html"); return; }
 
     document.getElementById("mpesaNumber").value = user.phone || "";
 
@@ -115,6 +116,10 @@
             '<td style="padding:0.6rem;color:' + color + ';font-weight:700">' + w.status + '</td>' +
           '</tr>';
         }).join("");
+      })
+      .catch(() => {
+        document.getElementById("historyBody").innerHTML =
+          '<tr><td colspan="3" style="text-align:center;padding:1rem;color:var(--danger)">Failed to load history.</td></tr>';
       });
 
     document.getElementById("withdrawAmount").addEventListener("input", function() {

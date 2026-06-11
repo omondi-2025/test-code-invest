@@ -67,6 +67,7 @@
 
   <script>
     let user = VillaAuth.getUser();
+    if (!user) { window.location.replace("login.html"); throw new Error("Not logged in"); }
 
     const walletEl = document.getElementById("walletBalance");
     walletEl.textContent = parseFloat(user.wallet || 0).toFixed(2);

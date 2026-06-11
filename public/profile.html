@@ -107,7 +107,7 @@
 
   <script src="pwa.js?v=8"></script>
   <script>
-    const user = VillaAuth.getUser();
+    const user = VillaAuth.getUser() || {};
 
     document.getElementById("displayName").textContent = user.fullName || "—";
     document.getElementById("displayEmail").textContent = user.email || "—";
