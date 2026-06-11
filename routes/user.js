@@ -88,11 +88,15 @@ router.post('/signup', authLimiter, async (req, res) => {
       role: 'user'
     });
 
+    // Sign the token BEFORE saving — if signing fails (e.g. missing secret)
+    // we must not leave a half-created account behind.
+    const token = signUserToken(newUser);
+
     await newUser.save();
     res.status(201).json({
       success: true,
       message: '✅ Registration successful.',
-      token: signUserToken(newUser),
+      token,
       user: cleanUserPayload(newUser),
     });
   } catch (err) {

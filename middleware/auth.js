@@ -1,7 +1,20 @@
 const jwt = require("jsonwebtoken");
 const mongoose = require("mongoose");
 
-const JWT_SECRET = process.env.JWT_SECRET;
+// Prefer a dedicated JWT_SECRET; fall back to a secret derived from
+// ADMIN_TOKEN so deployments that haven't set JWT_SECRET yet keep working.
+const JWT_SECRET =
+  process.env.JWT_SECRET ||
+  (process.env.ADMIN_TOKEN ? process.env.ADMIN_TOKEN + ":user-jwt" : null);
+
+if (!process.env.JWT_SECRET) {
+  console.warn(
+    JWT_SECRET
+      ? "⚠️ JWT_SECRET not set — falling back to a secret derived from ADMIN_TOKEN. Set JWT_SECRET in your environment."
+      : "❌ Neither JWT_SECRET nor ADMIN_TOKEN is set — user authentication WILL fail."
+  );
+}
+
 const TOKEN_TTL = "7d";
 
 function signUserToken(user) {
