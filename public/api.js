@@ -2,15 +2,49 @@
    Include with <script src="api.js"></script> BEFORE any page script
    that talks to the API. */
 (function () {
-  const AUTH_KEY = "vc_auth";       // "local" | "session"
-  const REMEMBER_KEY = "vc_remember"; // "1" when user chose remember me
-  const EMAIL_KEY = "vc_email";     // last remembered email (login form only)
+  const APP_VERSION = "7";
+  const AUTH_KEY = "vc_auth";
+  const REMEMBER_KEY = "vc_remember";
+  const EMAIL_KEY = "vc_email";
+  const VERSION_KEY = "vc_ver";
+
+  // ── One-time upgrade: purge stale caches & pre-JWT sessions ─────────────
+  (function upgradeApp() {
+    if (localStorage.getItem(VERSION_KEY) === APP_VERSION) return;
+
+    localStorage.setItem(VERSION_KEY, APP_VERSION);
+
+    // Pre-JWT sessions stored user without token — clear them
+    [localStorage, sessionStorage].forEach(function (s) {
+      if (s.getItem("user") && !s.getItem("token")) {
+        s.removeItem("user");
+        s.removeItem("token");
+        s.removeItem(AUTH_KEY);
+      }
+    });
+
+    if (!("serviceWorker" in navigator)) return;
+    if (sessionStorage.getItem("vc_reload_" + APP_VERSION)) return;
+
+    sessionStorage.setItem("vc_reload_" + APP_VERSION, "1");
+    navigator.serviceWorker.getRegistrations().then(function (regs) {
+      return Promise.all(regs.map(function (r) { return r.unregister(); }));
+    }).then(function () {
+      if (!("caches" in window)) { location.reload(); return; }
+      return caches.keys().then(function (keys) {
+        return Promise.all(keys.map(function (k) { return caches.delete(k); }));
+      });
+    }).then(function () {
+      location.reload();
+    }).catch(function () {
+      location.reload();
+    });
+  })();
 
   function activeStorage() {
     if (localStorage.getItem(AUTH_KEY) === "local") return localStorage;
     if (sessionStorage.getItem(AUTH_KEY) === "session") return sessionStorage;
 
-    // Legacy sessions created before vc_auth marker
     if (localStorage.getItem("token") && localStorage.getItem("user")) {
       localStorage.setItem(AUTH_KEY, "local");
       return localStorage;
@@ -52,8 +86,6 @@
       return localStorage.getItem(AUTH_KEY) === "local";
     },
 
-    // persist=true → localStorage (survives browser restart)
-    // persist=false → sessionStorage (cleared when tab/window closes)
     save(token, user, persist) {
       VillaAuth.clear();
       const store = persist ? localStorage : sessionStorage;
@@ -61,7 +93,6 @@
       store.setItem("token", token);
       store.setItem("user", JSON.stringify(user));
 
-      // Login-form prefs live in localStorage regardless of session type
       if (persist && user && user.email) {
         localStorage.setItem(REMEMBER_KEY, "1");
         localStorage.setItem(EMAIL_KEY, user.email);
@@ -71,7 +102,6 @@
       }
     },
 
-    // Restore saved email + remember-me checkbox on the login page
     getLoginPrefs() {
       return {
         remember: localStorage.getItem(REMEMBER_KEY) === "1",
@@ -87,7 +117,6 @@
       if (rememberEl) rememberEl.checked = prefs.remember;
     },
 
-    // Update cached user in whichever storage holds the active session
     updateUser(user) {
       const store = activeStorage();
       if (store) store.setItem("user", JSON.stringify(user));
@@ -99,7 +128,6 @@
         s.removeItem("user");
         s.removeItem(AUTH_KEY);
       });
-      // Keep vc_remember + vc_email — they're login-form prefs, not session data
     },
 
     logout() {
@@ -142,7 +170,9 @@
       const res = await fetch(url, opts);
       if (res.status === 401) {
         VillaAuth.clear();
-        window.location.href = "login.html";
+        if (!/\/login\.html|\/signup\.html/i.test(location.pathname)) {
+          window.location.replace("login.html");
+        }
         throw new Error("Unauthorized");
       }
       return res;

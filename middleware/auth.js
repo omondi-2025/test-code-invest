@@ -17,12 +17,39 @@ if (!process.env.JWT_SECRET) {
 
 const TOKEN_TTL = "7d";
 
+// Signing always uses the primary secret
+function signingSecret() {
+  return JWT_SECRET;
+}
+
+// Accept tokens signed with the current OR previous fallback secret
+// (covers deploys where JWT_SECRET was added/changed on the host).
+function verifySecrets() {
+  const secrets = [];
+  if (process.env.JWT_SECRET) secrets.push(process.env.JWT_SECRET);
+  const fallback = process.env.ADMIN_TOKEN ? process.env.ADMIN_TOKEN + ":user-jwt" : null;
+  if (fallback && !secrets.includes(fallback)) secrets.push(fallback);
+  if (!secrets.length && JWT_SECRET) secrets.push(JWT_SECRET);
+  return secrets;
+}
+
 function signUserToken(user) {
   return jwt.sign(
     { sub: String(user._id), role: user.role || "user" },
-    JWT_SECRET,
+    signingSecret(),
     { expiresIn: TOKEN_TTL }
   );
+}
+
+function verifyUserToken(token) {
+  for (const secret of verifySecrets()) {
+    try {
+      return jwt.verify(token, secret);
+    } catch {
+      // try next secret
+    }
+  }
+  return null;
 }
 
 // Verify a logged-in user. Sets req.userId / req.userRole.
@@ -34,14 +61,14 @@ function requireAuth(req, res, next) {
     return res.status(401).json({ success: false, message: "Authentication required." });
   }
 
-  try {
-    const payload = jwt.verify(token, JWT_SECRET);
-    req.userId = payload.sub;
-    req.userRole = payload.role || "user";
-    next();
-  } catch (err) {
+  const payload = verifyUserToken(token);
+  if (!payload) {
     return res.status(401).json({ success: false, message: "Session expired. Please log in again." });
   }
+
+  req.userId = payload.sub;
+  req.userRole = payload.role || "user";
+  next();
 }
 
 // Admin auth using the static ADMIN_TOKEN issued by /api/admin/login.
@@ -59,4 +86,4 @@ function isValidId(id) {
   return mongoose.Types.ObjectId.isValid(id);
 }
 
-module.exports = { signUserToken, requireAuth, requireAdmin, isValidId };
+module.exports = { signUserToken, verifyUserToken, requireAuth, requireAdmin, isValidId };

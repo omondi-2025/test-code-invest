@@ -1,23 +1,10 @@
-const CACHE_NAME = "villa-cash-v5";
+const CACHE_NAME = "villa-cash-v7";
+// Only cache static assets — never HTML/JS (those must always be fresh)
 const OFFLINE_ASSETS = [
-  "/",
-  "/index.html",
-  "/login.html",
-  "/signup.html",
-  "/profile.html",
-  "/deposit.html",
-  "/withdrawal.html",
-  "/invest.html",
-  "/history.html",
-  "/agent.html",
-  "/package.html",
   "/styles.css",
-  "/api.js",
-  "/pwa.js",
-  "/manifest.webmanifest",
   "/icons/icon-192.svg",
   "/icons/icon-512.svg",
-  "https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"
+  "/manifest.webmanifest",
 ];
 
 self.addEventListener("install", (event) => {
@@ -30,7 +17,7 @@ self.addEventListener("install", (event) => {
 self.addEventListener("activate", (event) => {
   event.waitUntil(
     caches.keys().then((keys) =>
-      Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key)))
+      Promise.all(keys.map((key) => caches.delete(key)))
     )
   );
   self.clients.claim();
@@ -41,11 +28,13 @@ self.addEventListener("fetch", (event) => {
 
   const url = new URL(event.request.url);
 
-  // Never intercept API calls — live data must always come from the network.
+  // Never intercept API calls
   if (url.pathname.startsWith("/api/")) return;
 
-  // Network-first for pages and assets so updates show up immediately;
-  // fall back to cache when offline.
+  // HTML and JS must always come from the network
+  if (url.pathname.endsWith(".html") || url.pathname.endsWith(".js")) return;
+
+  // Network-first for everything else; cache only for offline fallback
   event.respondWith(
     fetch(event.request)
       .then((response) => {

@@ -160,4 +160,34 @@ router.get('/me', requireAuth, async (req, res) => {
   }
 });
 
+// Legacy alias — older cached pages called GET /api/user/:id
+router.get('/:id', requireAuth, async (req, res) => {
+  if (String(req.params.id) !== String(req.userId)) {
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  }
+  try {
+    const user = await User.findById(req.userId).select('-password');
+    if (!user) return res.status(404).json({ success: false, message: '❌ User not found.' });
+    res.json({ success: true, user });
+  } catch (err) {
+    console.error('❌ Fetch user error:', err.message);
+    res.status(500).json({ success: false, message: '🚫 Failed to fetch user.' });
+  }
+});
+
+// Legacy alias — GET /api/user/:id/wallet
+router.get('/:id/wallet', requireAuth, async (req, res) => {
+  if (String(req.params.id) !== String(req.userId)) {
+    return res.status(403).json({ success: false, message: 'Forbidden' });
+  }
+  try {
+    const user = await User.findById(req.userId);
+    if (!user) return res.status(404).json({ success: false, message: 'User not found' });
+    res.json({ success: true, wallet: user.wallet });
+  } catch (err) {
+    console.error('❌ Wallet fetch error:', err.message);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
 module.exports = router;
