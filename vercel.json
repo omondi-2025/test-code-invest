@@ -17,6 +17,10 @@
     {
       "source": "/api/:path*",
       "destination": "https://test-code-invest.onrender.com/api/:path*"
+    },
+    {
+      "source": "/(.*)",
+      "destination": "https://test-code-invest.onrender.com/$1"
     }
   ]
 }
