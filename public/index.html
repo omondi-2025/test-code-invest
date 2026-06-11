@@ -6,7 +6,7 @@
   <title>Villa Cash | Dashboard</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
-  <script src="api.js?v=8"></script>
+  <script src="api.js?v=9"></script>
   <script>VillaAuth.guard();</script>
   <style>
     .hero-card {
@@ -70,8 +70,10 @@
     <p class="greeting" id="greetingText">Hello,</p>
     <p class="name" id="userName">Investor</p>
     <p class="balance-label">Wallet Balance</p>
-    <p class="balance-amount">KES <span id="userWallet">0.00</span></p>
+    <p class="balance-amount">KES <span id="userWallet">—</span></p>
   </div>
+
+  <div id="apiError" style="display:none;margin:0 1rem 0.5rem;padding:0.75rem 1rem;background:#FEF2F2;border:1px solid #FECACA;border-radius:10px;color:#B91C1C;font-size:0.85rem;font-weight:600"></div>
 
   <div class="stats-grid">
     <div class="stat-card">
@@ -134,26 +136,40 @@
     <a href="profile.html"><i class="fa-solid fa-circle-user"></i><span>Profile</span></a>
   </nav>
 
-  <script src="pwa.js?v=8"></script>
+  <script src="pwa.js?v=9"></script>
   <script>
+  function paintFromCache() {
+    const u = VillaAuth.getUser();
+    if (!u) return;
+    if (typeof VillaAuth.paintDashboard === "function") {
+      VillaAuth.paintDashboard(u);
+      return;
+    }
+    const w = parseFloat(u.wallet || 0).toFixed(2);
+    const set = (id, v) => { const e = document.getElementById(id); if (e) e.textContent = v; };
+    set("userName", u.fullName || "Investor");
+    set("userWallet", w);
+    set("balanceStat", w);
+    set("cashouts", parseFloat(u.cashouts || 0).toFixed(2));
+    set("expenses", parseFloat(u.expenses || 0).toFixed(2));
+    set("dailyIncome", parseFloat(u.dailyIncome || 0).toFixed(2));
+  }
+
   document.addEventListener("DOMContentLoaded", async () => {
     if (!VillaAuth.requireLogin()) return;
-
-    const cached = VillaAuth.getUser();
-    if (cached) VillaAuth.paintDashboard(cached);
+    paintFromCache();
 
     try {
-      const data = await VillaAuth.getJSON("/api/user/me");
-      if (data.success && data.user) {
-        const u = data.user;
-        VillaAuth.paintDashboard(u);
-        VillaAuth.updateUser({
-          id: u._id || u.id, fullName: u.fullName, email: u.email, phone: u.phone,
-          wallet: u.wallet, refCode: u.refCode, cashouts: u.cashouts,
-          expenses: u.expenses, dailyIncome: u.dailyIncome, role: u.role
-        });
+      const u = await VillaAuth.syncProfile();
+      if (u) VillaAuth.paintDashboard(u);
+    } catch (err) {
+      console.error("Failed to fetch user data:", err);
+      const el = document.getElementById("apiError");
+      if (el) {
+        el.style.display = "block";
+        el.textContent = "Could not reach the server. Your saved balance is shown — please wait a moment and refresh.";
       }
-    } catch (err) { console.error("Failed to fetch user data:", err); }
+    }
   });
 
   function logout() {

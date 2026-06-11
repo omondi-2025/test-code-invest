@@ -2,7 +2,7 @@
    Include with <script src="api.js"></script> BEFORE any page script
    that talks to the API. */
 (function () {
-  const APP_VERSION = "8";
+  const APP_VERSION = "9";
   const AUTH_KEY = "vc_auth";
   const REMEMBER_KEY = "vc_remember";
   const EMAIL_KEY = "vc_email";
@@ -14,13 +14,11 @@
 
     localStorage.setItem(VERSION_KEY, APP_VERSION);
 
-    // Pre-JWT sessions stored user without token — clear them
+    // Force fresh login — clears stale/invalid JWT sessions
     [localStorage, sessionStorage].forEach(function (s) {
-      if (s.getItem("user") && !s.getItem("token")) {
-        s.removeItem("user");
-        s.removeItem("token");
-        s.removeItem(AUTH_KEY);
-      }
+      s.removeItem("token");
+      s.removeItem("user");
+      s.removeItem(AUTH_KEY);
     });
 
     if (!("serviceWorker" in navigator)) return;
@@ -55,6 +53,8 @@
     }
     return null;
   }
+
+  let wakePromise = null;
 
   const VillaAuth = {
     getToken() {
@@ -122,6 +122,29 @@
       if (store) store.setItem("user", JSON.stringify(user));
     },
 
+    cacheUser(u) {
+      if (!u) return;
+      VillaAuth.updateUser({
+        id: u._id || u.id,
+        fullName: u.fullName,
+        email: u.email,
+        phone: u.phone,
+        wallet: u.wallet,
+        refCode: u.refCode,
+        cashouts: u.cashouts,
+        expenses: u.expenses,
+        dailyIncome: u.dailyIncome,
+        role: u.role,
+      });
+    },
+
+    wakeServer() {
+      if (!wakePromise) {
+        wakePromise = fetch("/api/ping", { cache: "no-store" }).catch(function () {});
+      }
+      return wakePromise;
+    },
+
     clear() {
       [localStorage, sessionStorage].forEach(function (s) {
         s.removeItem("token");
@@ -161,13 +184,26 @@
       return true;
     },
 
-    async fetch(url, options) {
-      const opts = { ...options };
-      opts.headers = { ...(options.headers || {}) };
+    async fetch(url, options, attempt) {
+      attempt = attempt || 0;
+      await VillaAuth.wakeServer();
+
+      const opts = { ...(options || {}) };
+      opts.headers = { ...(opts.headers || {}) };
       const token = VillaAuth.getToken();
       if (token) opts.headers["Authorization"] = "Bearer " + token;
 
-      const res = await fetch(url, opts);
+      let res;
+      try {
+        res = await fetch(url, opts);
+      } catch (err) {
+        if (attempt < 3) {
+          await new Promise(function (r) { setTimeout(r, 1500 * (attempt + 1)); });
+          return VillaAuth.fetch(url, options, attempt + 1);
+        }
+        throw err;
+      }
+
       if (res.status === 401) {
         VillaAuth.clear();
         if (!/\/login\.html|\/signup\.html/i.test(location.pathname)) {
@@ -175,6 +211,12 @@
         }
         throw new Error("Unauthorized");
       }
+
+      if ((res.status === 502 || res.status === 503 || res.status === 504) && attempt < 3) {
+        await new Promise(function (r) { setTimeout(r, 2000 * (attempt + 1)); });
+        return VillaAuth.fetch(url, options, attempt + 1);
+      }
+
       return res;
     },
 
@@ -221,6 +263,15 @@
     async getJSON(url) {
       const res = await VillaAuth.fetch(url);
       return res.json();
+    },
+
+    async syncProfile() {
+      const data = await VillaAuth.getJSON("/api/user/me");
+      if (data.success && data.user) {
+        VillaAuth.cacheUser(data.user);
+        return data.user;
+      }
+      return null;
     },
 
     fmtDate(value) {

@@ -6,7 +6,7 @@
   <title>Villa Cash | Sign Up</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
   <link rel="stylesheet" href="styles.css"/>
-  <script src="api.js?v=8"></script>
+  <script src="api.js?v=9"></script>
   <script>VillaAuth.guardGuestOnly();</script>
 </head>
 <body>
@@ -97,9 +97,14 @@
         const data = await res.json();
 
         if (data.success && data.user && data.token) {
-          setMsg("Account created! Redirecting…", "#10B981");
+          setMsg("Account created! Loading your account…", "#10B981");
           VillaAuth.save(data.token, data.user, true);
-          setTimeout(() => { window.location.href = "index.html"; }, 900);
+          try {
+            if (typeof VillaAuth.syncProfile === "function") {
+              await VillaAuth.syncProfile();
+            }
+          } catch (_) {}
+          window.location.href = "index.html";
         } else {
           setMsg(data.message || "Signup failed.", "#EF4444");
           signupBtn.disabled = false;
